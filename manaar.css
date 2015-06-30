@@ -1,0 +1,65 @@
+        body{
+            background-color: #fff;
+            color: #000;
+            font-family: Verdana;
+            font-size:11px;
+        }
+        span{
+            font-family: Verdana, Tahoma, Arial;
+            font-size: 11px;
+            font-weight: bold;
+            color:black;
+            cursor: pointer;
+        }
+        mark{
+            font-family: Verdana, Tahoma, Arial;
+            font-size: 11px;
+            font-weight: bold;
+            color:navy;
+            background-color: white;
+            cursor:pointer;
+
+        }        
+        .div_main{
+           	width:100%;
+            margin:auto;
+            z-index:1;
+            float:left;
+            position:relative;
+        }
+        .div_main fieldset{
+        	margin-bottom:20px;
+        }
+        .div_main div{
+        	margin-left:5px;
+        	margin-top:5px;
+        }        
+
+        .div_aux{
+            z-index:2;
+        	background-color: lightgray;
+        	display:none;
+            position:absolute;
+            right:0;
+            top:0;
+            margin-top:5px;
+            margin-right:5px;
+        }
+        .div_aux #close{
+            right:3px;
+            top:0;
+            position:absolute;
+            background-color: lightgray;
+            cursor:pointer;
+        }
+        .div_hidden{
+            position:relative;
+            float:left;
+            display:none;            
+        }
+        .div_hidden div{
+            position:relative;
+            float:left;
+            display:none;
+        }
+
