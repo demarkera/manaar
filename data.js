@@ -10,4 +10,4 @@ db.changes().on('change', function() {
   console.log('Ch-Ch-Changes');
 });
 
-db.replicate.to('http://demarkera.github.io/manaar/data.txt');
+db.replicate.to('data.txt');
