@@ -19,9 +19,11 @@
 
         }        
         .div_main{
-        	position: relative;
-        	float:left;
-        	width:68%;
+           	width:100%;
+            margin:auto;
+            z-index:1;
+            float:left;
+            position:relative;
         }
         .div_main fieldset{
         	margin-bottom:20px;
@@ -32,26 +34,20 @@
         }        
 
         .div_aux{
-        	max-width:30%;
-            min-width:15%;
-        	float: right;
-        	position:relative;
+            z-index:2;
         	background-color: lightgray;
         	display:none;
-            margin-top:15px;
-            margin-left:15px;
+            position:absolute;
+            right:0;
         }
-
-        .div_map{
-            max-width:15%;
-            float: right;
+        .div_hidden{
             position:relative;
-            background-color: lightgray;
-            display:block;
-        }        
-        .div_aux div{
-        	position:relative;
-        	float:left;
-        	display:none;
+            float:left;
+            display:none;            
+        }
+        .div_hidden div{
+            position:relative;
+            float:left;
+            display:none;
         }
 

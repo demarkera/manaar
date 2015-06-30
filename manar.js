@@ -2,10 +2,12 @@
        $("div#" + divId).toggle();
     }
     function switcherAux(divId, value){
-    	$("#aux").show();
-		$("#aux div").hide();
-		$("#aux_legend").text(value);  
-		$("div#" + divId).toggle();
+        //alert(value);
+    	$("#aux").toggle();
+		$("#aux_value").show();
+		$("#aux_legend").text(value);
+        $("#aux_value").html($("div#" + divId).html());  
+		//$("div#" + divId).show();
     }
 
     $("span").click( function(){
