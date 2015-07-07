@@ -44,6 +44,13 @@
             margin-right:5px;
             width:35%;
         }
+        .div_aux img{
+            position:relative;
+            float:right;
+            margin:0px;
+            margin-left:5px;
+
+        }
         .div_aux #close{
             right:3px;
             top:0;
