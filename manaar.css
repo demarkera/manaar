@@ -68,3 +68,8 @@
             float:left;
             display:none;
         }
+        #aux_legend{
+            font-size:14px;
+            font-weight:bold;
+            font-family: Copperplate / Copperplate Gothic Light;
+        }
