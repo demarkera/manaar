@@ -1,0 +1,14 @@
+.modal-body img{
+	float:right;
+	position:relative;
+	right:0px;
+}
+.modal-body p{
+	position:relative;
+}
+
+#tab_important button{
+	float:left;
+	margin:2px;
+	position:relative;
+}

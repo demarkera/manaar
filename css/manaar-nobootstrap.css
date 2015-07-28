@@ -28,11 +28,34 @@
         }
         .div_main fieldset{
         	margin-bottom:20px;
+            width:98%;
+            float:left;
+            position:static;
+            -moz-border-radius:7px;
+            -webkit-border-radius:7px;
+            border-radius:7px;   
+            display:inline;         
         }
         .div_main div{
             margin-left:5px;
         	margin-top:5px;
-        }        
+            width:95%;
+            float:left;
+            display:inline;
+        } 
+        .div_main .grouper{
+            margin-left:5px;
+            margin-top:5px;
+            width:49%;
+            float:left;
+        }
+        .div_main div div div{
+            width:95%;
+        }         
+        .div_main h3{
+            margin:0px;
+            padding:0px;
+        }                  
         .div_aux{
             z-index:2;
         	background-color: lightgray;
