@@ -5,10 +5,6 @@ function switcher(divId) {
 $(".marker").click(function() {
     switcher(this.id);
 });
-$("m.").click(function() {
-    switcherAux(this.id, $(this).text());
-});
-
 
 $('#tabs a').click(function (e) {
   e.preventDefault()
@@ -21,4 +17,5 @@ $("#button_houses").click(function (e) {
 
 $(document).ready(function(){
    $("#div_houses").hide(); 
+   $("#tab_rules").load("html/rules.htm");
 })
