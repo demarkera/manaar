@@ -15,7 +15,11 @@ $("#button_houses").click(function (e) {
   $("#div_houses").toggle();
 })
 
+$("#butTab_rules").click(function(){
+	$("#tab_rules").load("html/rules.htm");
+
+})
+
 $(document).ready(function(){
    $("#div_houses").hide(); 
-   $("#tab_rules").load("html/rules.htm");
 })
