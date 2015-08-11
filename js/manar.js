@@ -11,13 +11,24 @@ $('#tabs a').click(function (e) {
   $(this).tab('show')
 })
 
+$('#rules_tab a').click(function (e) {
+  e.preventDefault()
+  $(this).tab('show')
+})
+
+
 $("#button_houses").click(function (e) {
   $("#div_houses").toggle();
 })
 
 $("#butTab_rules").click(function(){
-	$("#tab_rules").load("html/rules.htm");
-
+	$.ajax({
+	  url: "html/rules.htm",
+	  cache: false
+	})
+	  .done(function( html ) {
+	    $( "#tab_rules" ).html( html );
+	  });
 })
 
 $(document).ready(function(){
