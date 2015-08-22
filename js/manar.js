@@ -33,4 +33,29 @@ $("#butTab_rules").click(function(){
 
 $(document).ready(function(){
    $("#div_houses").hide(); 
+	// sidebar load
+	$.ajax({
+	  url: "html/sidebar.htm",
+	  cache: false
+	}).done(function( html ) {
+	    	$( "#sidebar" ).html( html );
+	    });
+	//preEras load
+	$.ajax({
+	  url: "html/preEras.htm",
+	  cache: false
+	}).done(function( html ) {
+	    	$( "#tab_preEras" ).html( html );
+	    });
+
+	//firstEra load
+	$.ajax({
+	  url: "html/firstEra.htm",
+	  cache: false
+	}).done(function( html ) {
+	    	$( "#tab_firstEra" ).html( html );
+	    });
+
+
+
 })
