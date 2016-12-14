@@ -1,0 +1,38 @@
+<html xmlns="http://www.w3.org/1999/xhtml" xmlns:f="http://java.sun.com/jsf/core" xmlns:h="http://java.sun.com/jsf/html">
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>Layout validation</title>
+<link href="../css/main.css" rel="stylesheet" type="text/css"> 
+</head>
+
+<body>
+	<p>Coloque o conteúdo do arquivo na caixa, selecione o tipo de arquivo e clique no botão abaixo para validar seu conteúdo:<br>
+	O layout é identificado automaticamente de acordo com a primeira linha dos dados informados</p>
+	<div id="messageDiv"></div><br>
+<textarea name="mas" rows="15"  class="content">5037PNP0003000175900                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+5037PNP0003000175901INC0001700291956170000000004500000020180715202207152016063020160888037                     2                 20160509        PREFEITURA MUNICIPAL DE LUIS EDUARDO MAGALHAES    BAAgricultura Sequeiro                                                                                                                                                                                                                                                                                                                           
+5037PNP0003000175903INC000170029195617000001381093821390830198309128309180318930182039128903
+5037PNP000300017599900004                                                                                                                                                                                                                                                                                                                                                                                                                                                                                          </textarea>
+
+<br>
+	<button class="validateButton">Validate!</button>
+<h3>Resultado:</h3>
+<pre>
+<div class="mas" ></div>
+<div class="layoutType"></div>
+<div class="resultDiv" ></div>
+</pre>
+	
+<script src="http://code.jquery.com/jquery-1.11.1.min.js"></script> 
+<script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script> 
+<script src="http://netdna.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script> 
+<script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.7.0/underscore-min.js"></script> 
+<script src="http://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js"></script> 
+<script src="../js/validadorMain.js"></script> 
+<script src="../js/validadorSLC.js"></script> 
+<script src="../js/validadorPCA.js"></script> 
+<script src="../js/validadorMII.js"></script> 
+<script src="../js/validadorPNP.js"></script> 
+
+</body>
+</html>
