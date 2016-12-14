@@ -2,7 +2,7 @@
 
 	body{
 		font-family:Verdana;
-		font-size:10px;
+		font-size:13px;
 		white-space:nowrap;
 		overflow-x:scroll;
 		witdh:auto;
@@ -33,7 +33,7 @@
 	}
 	
 	textarea{
-		font-size:10px;
+		font-size:13px;
 	}
 	
 	.error{
