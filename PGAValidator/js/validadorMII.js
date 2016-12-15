@@ -94,7 +94,7 @@ function MIIBody01(line){
 	//Tipo de beneficiário
 	stringValidator(line,191, 1, false, 'Tipo de beneficiário', 'F,J');
 	//Sistemática Convencional
-	stringValidator(line,192, 1, false, 'Sistemática Convencional', 'S');
+	stringValidator(line,192, 1, false, 'Sistemática Convencional', 'S,N');
 	//Cor / etnia do beneficiário
 	validatePCABody01Etnia(line, line.substr(191,1));
 	//Vago
@@ -122,7 +122,7 @@ function MIIBody02(line){
 	//Vago
 	stringValidator(line,34, 24, true, 'Vago', '');
 	//Periodicidade
-	numberValidator(line,58, 2, false, 'Periodicidade', '09,11');
+	stringValidator(line,58, 2, false, 'Periodicidade', '09,11');
 	//Vago
 	stringValidator(line,60, 2, true, 'Vago', '');
 	//Valor do contrato

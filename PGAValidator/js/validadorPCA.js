@@ -95,7 +95,7 @@ function PCABody01(line){
 	//Tipo de beneficiário
 	stringValidator(line,191, 1, false, 'Tipo de beneficiário', 'F,J');
 	//Sistemática Convencional
-	stringValidator(line,192, 1, false, 'Sistemática Convencional', 'S');
+	stringValidator(line,192, 1, false, 'Sistemática Convencional', 'S,N');
 	//Cor / etnia do beneficiário
 	validatePCABody01Etnia(line, line.substr(191,1));
 	//Vago
@@ -225,6 +225,6 @@ function validatePCABody01Etnia(line, pessoa){
 		stringValidator(line,193, 1, false, 'Cor / etnia do beneficiário', '1,2,4,6,8,9');
 	}
 	else{
-		stringValidator(line,193, 1, false, 'Cor / etnia do beneficiário', ' ');
+		stringValidator(line,193, 1, true, 'Cor / etnia do beneficiário', '1,2,4,6,8,9, ');
 	}
 }

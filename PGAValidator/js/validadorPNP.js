@@ -93,7 +93,7 @@ function PNPBody01(line){
 	//Tipo de beneficiário
 	stringValidator(line,191, 1, false, 'Tipo de beneficiário', 'F,J');
 	//Sistemática Convencional
-	stringValidator(line,192, 1, false, 'Sistemática Convencional', 'S');
+	stringValidator(line,192, 1, false, 'Sistemática Convencional', 'S,N');
 	//Cor / etnia do beneficiário
 	validatePCABody01Etnia(line, line.substr(191,1));
 	//Vago
@@ -134,7 +134,7 @@ function PNPBody02(line){
 	//Quantidade de amortizações
 	numberValidator(line,268, 3, false, 'Quantidade de amortizações', '');
 	//CNPJ da Cooperativa Singular de Crédito
-	numberValidator(line,271, 14, false, 'CNPJ da Cooperativa Singular de Crédito', '');
+	numberValidator(line,271, 14, true, 'CNPJ da Cooperativa Singular de Crédito', '');
 	//Vago
 	numberValidator(line,285, 11, false, 'Vago', '');
 	//Data do protocolo da operação no Agente Financeiro

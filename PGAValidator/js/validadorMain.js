@@ -108,7 +108,7 @@ function numberValidator(line, iniPos, length, canBeBlank, field, fixedValue, un
 	} 
 	
 	//Number only validation
-	re = /^[0-9]+$/; 
+	re = /^[0-9 ]+$/; 
 	if(!re.test(temp)){
 		printResult(temp, field, true, "Campo permite somente números");
 		debug(field+"["+iniPos+", "+ length+"] :"+temp);
