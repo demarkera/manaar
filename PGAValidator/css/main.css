@@ -9,8 +9,6 @@
 	}
 	div{
 		width:auto;
-		
-		
 	}
 	.label{
 		font-weight: bold;
@@ -34,6 +32,8 @@
 	
 	textarea{
 		font-size:14px;
+		width:auto;
+		min-width:1200px;
 	}
 	
 	.error{

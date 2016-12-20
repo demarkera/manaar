@@ -123,7 +123,7 @@ function PCABody02(line){
 	//Vago
 	stringValidator(line,34, 24, true, 'Vago', '');
 	//Periodicidade
-	numberValidator(line,58, 2, false, 'Periodicidade', '09,11');
+	stringValidator(line,58, 2, false, 'Periodicidade', '09,11');
 	//Vago
 	stringValidator(line,60, 2, true, 'Vago', '');
 	//Valor do contrato
