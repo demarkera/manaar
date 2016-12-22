@@ -161,10 +161,10 @@ function printResult(data, field, result, errorMessage, iniPos, length){
 		else{
 			gray = 'correct1';
 		}
-		temp = "<div class='tooltip "+ gray + "'>" + data.replace(" ", "&nbsp;") +"<span class='tooltipText'>Campo: " + field + "<br>Posição " + iniPos + ", Tamanho " + length+ "</span></div>";
+		temp = "<div class='tooltip "+ gray + "'>" + data.replace(" ", "&nbsp;") +"<span class='tooltipText'>Campo: " + field + "<br>Posição " + parseInt(iniPos+1) + ", Tamanho " + length+ "</span></div>";
 	}
 	else{
-		temp = "<div class='tooltip error'>" + data.replace(' ', '&nbsp;') + "<span class='tooltipText error'>Campo: " + field + "<br> Posição " + iniPos + ", Tamanho " + length + "<br>Erro: " + errorMessage + "</span></div>";
+		temp = "<div class='tooltip error'>" + data.replace(' ', '&nbsp;') + "<span class='tooltipText error'>Campo: " + field + "<br> Posição " + parseInt(iniPos+1) + ", Tamanho " + length + "<br>Erro: " + errorMessage + "</span></div>";
 	}
 	contentResult += temp;
 }
