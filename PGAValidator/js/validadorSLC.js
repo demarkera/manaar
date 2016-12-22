@@ -94,7 +94,7 @@ function SLCBody01(line){
 	//UF do órgão concedente
 	stringValidator(line,195, 2, true, 'UF do órgão concedente', '');
 	//Finalidade da concessão da licença ou dispensa de licença
-	stringValidator(line,197, 100, false, 'Finalidade da concessão da licença ou dispensa de licença', '');
+	stringValidator(line,197, 100, true, 'Finalidade da concessão da licença ou dispensa de licença', '');
 	//Vago
 	stringValidator(line,297, 203, true, 'Vago', '');	
 	
