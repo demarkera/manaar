@@ -58,7 +58,7 @@ function stringValidator(line, iniPos, length, canBeBlank, field, fixedValue){
 	//Blank value validation
 	if(!canBeBlank){
 		if(validateBlank(temp, canBeBlank)){
-			printResult(temp, field, true, "Campo não pode estar em branco");
+			printResult(temp, field, true, "Campo não pode estar em branco", iniPos, length);
 			return;
 		}
 	}
@@ -72,19 +72,19 @@ function stringValidator(line, iniPos, length, canBeBlank, field, fixedValue){
 					found=true;
 				}
 			}
-			printResult(temp, field, !found, "Valor do campo não está dentro dos valores esperados: "+ fixedValue);
+			printResult(temp, field, !found, "Valor do campo não está dentro dos valores esperados: "+ fixedValue, iniPos, length);
 			return;
 
 		}
 		else{
 			if(temp != fixedValue){
-				printResult(temp, field, true, "Valor do campo é diferente do valor esperado "+ fixedValue);
+				printResult(temp, field, true, "Valor do campo é diferente do valor esperado "+ fixedValue, iniPos, length);
 				return;
 			} 
 		}
 	}
 
-	printResult(temp, field, false, '');
+	printResult(temp, field, false, '', iniPos, length);
 
 }
 
@@ -96,25 +96,25 @@ function numberValidator(line, iniPos, length, canBeBlank, field, fixedValue, un
 	if(!canBeBlank){
 		blankError = validateBlank(temp, canBeBlank);
 		if(blankError){
-			printResult(temp, field, true, "Campo não pode estar em branco");
+			printResult(temp, field, true, "Campo não pode estar em branco", iniPos, length);
 			return;
 		}
 	}
 	
 	//fixed value Validation
 	if(fixedValue != '' && temp != fixedValue){
-		printResult(temp, field, true, "Valor do campo é diferente do valor esperado "+ fixedValue);
+		printResult(temp, field, true, "Valor do campo é diferente do valor esperado "+ fixedValue, iniPos, length);
 		return;
 	} 
 	
 	//Number only validation
 	re = /^[0-9 ]+$/; 
 	if(!re.test(temp)){
-		printResult(temp, field, true, "Campo permite somente números");
+		printResult(temp, field, true, "Campo permite somente números", iniPos, length);
 		debug(field+"["+iniPos+", "+ length+"] :"+temp);
 		return;
 	}
-	printResult(temp, field, false, "Campo permite somente números ");
+	printResult(temp, field, false, "Campo permite somente números ", iniPos, length);
 }
 
 function dateValidator(line, iniPos, length, canBeBlank, field, fixedValue){
@@ -127,14 +127,14 @@ function dateValidator(line, iniPos, length, canBeBlank, field, fixedValue){
 	//Blank value validation
 	if(!canBeBlank){
 		if(validateBlank(temp, canBeBlank)){
-			printResult(temp, field, true, "Campo não pode estar em branco");
+			printResult(temp, field, true, "Campo não pode estar em branco", iniPos, length);
 			return;
 		}
 	}
 	if(month<1 || month > 12 || day < 01 || day > 31 || ( month == 2 && day > 29) || ($.inArray(month, months30) && day > 30)){
-		printResult(temp, field, true, 'Data Inválida');
+		printResult(temp, field, true, 'Data Inválida', iniPos, length);
 	}
-	printResult(temp, field, false, 'Data Inválida ');
+	printResult(temp, field, false, 'Data Inválida ', iniPos, length);
 }
 
 
@@ -151,7 +151,7 @@ function validateBlank(data, canBeBlank){
 	}
 }
 
-function printResult(data, field, result, errorMessage){
+function printResult(data, field, result, errorMessage, iniPos, length){
 	var temp = "";
 	
 	if(!result){
@@ -161,10 +161,10 @@ function printResult(data, field, result, errorMessage){
 		else{
 			gray = 'correct1';
 		}
-		temp = "<div class='tooltip "+ gray + "'>" + data.replace(" ", "&nbsp;") +"<span class='tooltipText'>" + field + "</span></div>";
+		temp = "<div class='tooltip "+ gray + "'>" + data.replace(" ", "&nbsp;") +"<span class='tooltipText'>Campo: " + field + "<br>Posição " + iniPos + ", Tamanho " + length+ "</span></div>";
 	}
 	else{
-		temp = "<div class='tooltip error'>" + data.replace(' ', '&nbsp;') + "<span class='tooltipText error'>" + field + " - " + errorMessage + "</span></div>";
+		temp = "<div class='tooltip error'>" + data.replace(' ', '&nbsp;') + "<span class='tooltipText error'>Campo: " + field + "<br> Posição " + iniPos + ", Tamanho " + length + "<br>Erro: " + errorMessage + "</span></div>";
 	}
 	contentResult += temp;
 }
