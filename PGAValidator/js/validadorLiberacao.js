@@ -161,7 +161,7 @@ function liberacaoTrailer(line, linesLength){
 	//Tipo do registro
 	stringValidator(line,18, 2, false, 'Tipo do registro', '99');
 	//Quantidade de Registros 
-	numberValidator(line,20, 5, false, 'Quantidade de Registros ', '';
+	numberValidator(line,20, 5, false, 'Quantidade de Registros ', '');
 	//Vago
 	stringValidator(line,25, 475, true, 'Vago', '');
 }
