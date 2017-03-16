@@ -1,19 +1,57 @@
-var content = "";
-var currentLine = "";
-var debugMode = false;	
-var gray = 1;
-var contentResult = "";
-var chosenType = 0;
-
 $('.validateButton').click(function(){
+	callValidation();
+});  
+
+$(".content").focusout(function(){
+	callValidation();
+})
+
+function callValidation(){
 	console.clear();
-	content = $('.content:not(.focus)').val();
+	
+	var divContent = $('.content').html();
+	divContent = divContent.replace("nbsp;"," ");
+	content = "";
+	var divAux = "";
+	if(divContent != divContent.replace(/<(?:.|\n)*?>/gm, '')){
+		var divText = "";
+		console.log("has htm tags");
+		$("#layoutType").html(divContent);
+//		console.log(divContent);
+		var containerDiv = document.getElementById("layoutType");
+		var containerDivLine = containerDiv.innerHTML.split("><br><");
+//		console.log("containerDivLine.length :"+containerDivLine.length);
+		for(var j = 0; j < containerDivLine.length; j++){
+			contentLine = "";
+//			console.log("line: "+j +" -> " + containerDivLine[j]);
+			$("#divAux").html("<" + containerDivLine[j] + ">");
+			divAux = document.getElementById("divAux");
+//			console.log("length : " + divAux.getElementsByClassName("sourceData").length);
+			for(var i = 0; i < divAux.getElementsByClassName("sourceData").length; i++){
+//				console.log("data: "+ divAux.getElementsByClassName("sourceData")[i].innerHTML);
+				contentLine = contentLine + divAux.getElementsByClassName("sourceData")[i].innerHTML;
+			}
+//			console.log("contentLine[" + j + "] :" +contentLine);
+			content = content + contentLine + "\n";
+		}
+//		content = content.replace("&nbsp;"," ");
+		$(".content").html(content);
+	}
+	else{
+		console.log("dont have html tags");
+		content = divContent;
+		$(".content").html(divContent);
+	}
+	
+//	console.log("content: " + content);
+	
 	contentResult = '';
-    var contentAttr = $('.content:not(.focus)').attr('name');
+    var contentAttr = $('.content').attr('name');
     
     //calling validators
     chosenType = $('#layoutTypeRadio:checked').val();
     debug('chosen type: ' + chosenType);
+    error = false;
     validateLayout();
 
     content = content.replace(/\r?\n/g,'<br/>');
@@ -21,168 +59,31 @@ $('.validateButton').click(function(){
     
     //displaying text
     $('.'+contentAttr+'').html(content);
-    $('.resultDiv').html(contentResult);
+    $('.content').html(contentResult);
     
-});  
-
+    if(error){
+    	$("#layoutType").addClass("red").removeClass("green");
+    }
+    else{
+    	$("#layoutType").removeClass("red").addClass("green");
+    }
+    	
+	
+}
 function validateLayout(){
 	//content is where the input data is;
 	
 	//debug (validateBlank('aa ', false));
-	switch(content.substr(4,3)){
-		case 'SLC':
-			validateSLC();
-		break;
-		case 'PCA':
-			validatePCA();
-		break;
-		case 'MII':
-			validateMII();
-		break;
-		case 'PNP':
-			validatePNP();
-		break;
-	}
-}
-
-function debug(message){
-	if(debugMode){
-		console.log(message);
-	}
-}
-
-function stringValidator(line, iniPos, length, canBeBlank, field, fixedValue){
-	var temp = line.substr(iniPos, length);
-	var found = false;
-		
-	//Blank value validation
-	if(!canBeBlank){
-		if(validateBlank(temp, canBeBlank)){
-			printResult(temp, field, true, "Campo não pode estar em branco", iniPos, length);
-			return;
-		}
-	}
+	var tpArq = $("input[name=tpArq]:checked").val();
+//	console.log("tpArq: " + tpArq);
 	
-	//fixed value Validation
-	if(fixedValue != ''){
-		if(fixedValue.indexOf(',') != -1){
-			var splitted = fixedValue.split(",");
-			for (j=0; j<splitted.length; j++){
-				if(temp == splitted[j]){
-					found=true;
-				}
-			}
-			printResult(temp, field, !found, "Valor do campo não está dentro dos valores esperados: "+ fixedValue, iniPos, length);
-			return;
-
-		}
-		else{
-			if(temp != fixedValue){
-				printResult(temp, field, true, "Valor do campo é diferente do valor esperado "+ fixedValue, iniPos, length);
-				return;
-			} 
-		}
-	}
-
-	printResult(temp, field, false, '', iniPos, length);
-
-}
-
-function numberValidator(line, iniPos, length, canBeBlank, field, fixedValue, unique){
-	var temp = line.substr(iniPos, length);
-	
-	debug("numberValidator: " + temp);
-	//Blank value validation
-	if(!canBeBlank){
-		blankError = validateBlank(temp, canBeBlank);
-		if(blankError){
-			printResult(temp, field, true, "Campo não pode estar em branco", iniPos, length);
-			return;
-		}
-	}
-	
-	//fixed value Validation
-	if(fixedValue != '' && temp != fixedValue){
-		printResult(temp, field, true, "Valor do campo é diferente do valor esperado "+ fixedValue, iniPos, length);
-		return;
-	} 
-	
-	//Number only validation
-	re = /^[0-9 ]+$/; 
-	if(!re.test(temp)){
-		printResult(temp, field, true, "Campo permite somente números", iniPos, length);
-		debug(field+"["+iniPos+", "+ length+"] :"+temp);
-		return;
-	}
-	printResult(temp, field, false, "Campo permite somente números ", iniPos, length);
-}
-
-function dateValidator(line, iniPos, length, canBeBlank, field, fixedValue){
-	var temp = line.substr(iniPos, length);
-	var year = parseInt(temp.substr(0,4));
-	var month = parseInt(temp.substr(4,2));
-	var day = parseInt(temp.substr(6,2));
-	var months30 = [4,6,9,11];
-	
-	//Blank value validation
-	if(!canBeBlank){
-		if(validateBlank(temp, canBeBlank)){
-			printResult(temp, field, true, "Campo não pode estar em branco", iniPos, length);
-			return;
-		}
-	}
-	if(month<1 || month > 12 || day < 01 || day > 31 || ( month == 2 && day > 29) || ($.inArray(month, months30) && day > 30)){
-		printResult(temp, field, true, 'Data Inválida', iniPos, length);
-	}
-	printResult(temp, field, false, 'Data Inválida ', iniPos, length);
-}
-
-
-function validateBlank(data, canBeBlank){
-	var blankData = "";
-	for(i=0; i< data.length; i++){
-		blankData+= " ";
-	}
-	if(!canBeBlank && blankData == data){
-		return true;
+	if(tpArq == "sol"){
+		validateSolicitacao();
 	}
 	else{
-		return false;
+		if(tpArq == "lib"){
+			validateLiberacao();
+		}
 	}
-}
-
-function printResult(data, field, result, errorMessage, iniPos, length){
-	var temp = "";
 	
-	if(!result){
-		if(gray == 'correct1'){
-			gray = 'correct2';
-		}
-		else{
-			gray = 'correct1';
-		}
-		temp = "<div class='tooltip "+ gray + "'>" + data.replace(" ", "&nbsp;") +"<span class='tooltipText'><u><b>Campo:</b></u> " + field + "<br><b><u>Posição:</b></u> " + parseInt(iniPos+1) + ", <u><b>Tamanho:</b></u> " + length+ "</span></div>";
-	}
-	else{
-		temp = "<div class='tooltip error'>" + data.replace(' ', '&nbsp;') + "<span class='tooltipText error'><b><u>Campo:</b></u> " + field + "<br><u><b>Posição:</b></u> " + parseInt(iniPos+1) + ", <b><u>Tamanho: </b></u>" + length + "<br><b><u>Erro:</b></u> " + errorMessage + "</span></div>";
-	}
-	contentResult += temp;
-}
-
-function errorMessage(msg){
-	contentResult += "<div class='error'>"+msg+"</div>";
-}
-
-function createTable(){
-//	contentResult += "<table cellpadding='0' cellspacing='0' border='0'>";
-	contentResult += "<h3>Validated File:</h3>";
-}
-function closeTable(){
-//	contentResult += "</table>";
-}
-function openLine(line){
-//	contentResult += "<p>Line "+ line +": ";
-}
-function closeLine(){
-	contentResult += "<br/>";
 }

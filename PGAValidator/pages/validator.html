@@ -8,31 +8,35 @@
 <body>
 	<p>Coloque o conteúdo do arquivo na caixa, selecione o tipo de arquivo e clique no botão abaixo para validar seu conteúdo:<br>
 	O layout é identificado automaticamente de acordo com a primeira linha dos dados informados</p>
-	<div id="messageDiv"></div><br>
-<textarea name="mas" rows="15"  class="content">5037PNP0003000175900                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
-5037PNP0003000175901INC0001700291956170000000004500000020180715202207152016063020160888037                     2                 20160509        PREFEITURA MUNICIPAL DE LUIS EDUARDO MAGALHAES N  BAAgricultura Sequeiro                                                                                                                                                                                                                                                                                                                           
-5037PNP0003000175902INC0001700291956170000000004500000020111715202207152016063020160888037                     2                 20160509        PREFEITURA MUNICIPAL DE LUIS EDUARDO MAGALHAES    BAAgricultura Sequeiro                                                                                                                                                                                                                                                                                                                           
-5037PNP0003000175903INC000170029195617000001381093821390830198309128309180318930182039128903
-5037PNP000300017599900004                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    </textarea>
-
+	<div id="messageDiv"></div>
+	<p align="left">
+	<input type="radio" value="sol" name="tpArq" checked>PGA Solicitação BNDES Automático <b>PCA, PNP, MIII</b>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;
+	<input type="radio" value="lib" name="tpArq">PGA Pedido de Liberação <b>SLC</b></p>
+<div class="layoutType" id="layoutType"></div>
+	
+<pre>
+<div contenteditable="true""  class="content">5037SLC0003000175900                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                
+5037SLC0003000175901INC0001700291956170000000004500000020180715202207152016063020160888037                     2                 20160509        PREFEITURA MUNICIPAL DE LUIS EDUARDO MAGALHAES N  BAAgricultura Sequeiro                                                                                                                                                                                                                                                                                                                           
+5037SLC0003000175902INC0001700291956170000000004500000020111715202207152016063020160888037                     2                 20160509        PREFEITURA MUNICIPAL DE LUIS EDUARDO MAGALHAES    BAAgricultura Sequeiro                                                                                                                                                                                                                                                                                                                           
+5037SLC0003000175903INC000170029195617000001381093821390830198309128309180318930182039128903
+5037SLC000300017599900004                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                    </div>
+</pre>
 <br>
 	<button class="validateButton">Validate!</button>
-<h3>Resultado:</h3>
 <pre>
-<div class="layoutType"></div>
 <div class="resultDiv" ></div>
+<div id="divAux"></div>
 </pre>
-	
+
 <script src="http://code.jquery.com/jquery-1.11.1.min.js"></script> 
 <script src="http://ajax.googleapis.com/ajax/libs/jqueryui/1.11.2/jquery-ui.min.js"></script> 
 <script src="http://netdna.bootstrapcdn.com/bootstrap/3.3.0/js/bootstrap.min.js"></script> 
 <script src="http://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.7.0/underscore-min.js"></script> 
 <script src="http://cdnjs.cloudflare.com/ajax/libs/jquery-easing/1.3/jquery.easing.min.js"></script> 
 <script src="../js/validadorMain.js"></script> 
-<script src="../js/validadorSLC.js"></script> 
-<script src="../js/validadorPCA.js"></script> 
-<script src="../js/validadorMII.js"></script> 
-<script src="../js/validadorPNP.js"></script> 
+<script src="../js/validadorSolicitacao.js"></script> 
+<script src="../js/validadorLiberacao.js"></script> 
+<script src="../js/validadorFunctions.js"></script> 
 
 </body>
 </html>
