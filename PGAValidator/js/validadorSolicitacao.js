@@ -116,7 +116,7 @@ function solicitacaoBody01(line){
 	//Tipo de beneficiário
 	stringValidator(line,191, 1, false, 'Tipo de beneficiário', 'F,J');
 	//Sistemática Convencional
-	stringValidator(line,192, 1, false, 'Sistemática Convencional', 'S,N');
+	stringValidator(line,192, 1, false, 'Sistemática Convencional', 'S');
 	//Cor / etnia do beneficiário
 	validateEtnia(line, line.substr(191,1), 193);
 	//Vago
@@ -154,7 +154,7 @@ function solicitacaoBody02(line){
 	//Vago
 	stringValidator(line,81, 186, true, 'Vago', '');
 	//Indicador de cobrança de juros na carência
-	stringValidator(line,267, 1, false, 'Indicador de cobrança de juros na carência', 'S,N');
+	stringValidator(line,267, 1, false, 'Indicador de cobrança de juros na carência', 'S');
 	//Quantidade de amortizações
 	numberValidator(line,268, 3, false, 'Quantidade de amortizações', '');
 	//CNPJ da Cooperativa Singular de Crédito
