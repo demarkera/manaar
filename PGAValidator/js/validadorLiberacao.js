@@ -2,7 +2,7 @@ function validateLiberacao(){
 	anoSafra = "";
 	var layoutName = "";
 	
-	console.log(content.substr(4,3));
+	console.log("validateLiberacao"+content.substr(4,3));
 	switch(content.substr(4,3)){
 	case 'SLC':
 		layoutName = "SLC";
@@ -16,7 +16,7 @@ function validateLiberacao(){
 	}
 
 	console.log("validating using the Liberacao "+layoutName+" layout");
-	$('.layoutType').html("<h3>Solicitação "+layoutName+"</h3>");
+	$('.layoutType').html("<h3>Liberação "+layoutName+"</h3>");
 	
 	var lines = content.split("\n");
 	//main loop
@@ -120,7 +120,7 @@ function liberacaoBody01(line){
 }
 
 function liberacaoBody03(line){
-	console.log("SLCBody03");
+	console.log("Liberação Body03");
 	
 	//Credencial
 	numberValidator(line,0, 4, false, 'Credencial', '');
@@ -149,7 +149,7 @@ function liberacaoBody03(line){
 }
 
 function liberacaoTrailer(line, linesLength){
-	console.log("SLCTrailer");
+	console.log("Liberação Trailer");
 	//Credencial
 	numberValidator(line,0, 4, false, 'Credencial', '');
 	//Tipo de Solicitação

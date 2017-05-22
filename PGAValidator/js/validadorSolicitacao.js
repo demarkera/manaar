@@ -2,7 +2,7 @@ function validateSolicitacao(){
 	anoSafra = "";
 	var layoutName = "";
 	
-	console.log(content.substr(4,3));
+	console.log("validateSolicitacao"+content.substr(4,3));
 	switch(content.substr(4,3)){
 	case 'PCA':
 		layoutName = "PCA";
@@ -14,10 +14,11 @@ function validateSolicitacao(){
 		layoutName = "PRONAMP";
 	break;
 	default:
-		console.log("tipo de Layout Inválido");
-		$('.layoutType').html("<h3 class='red'>Layout "+content.substr(4,3)+" inválido</h3>");
-		contentResult = content;
-		return;
+		layoutName = "PCA"
+		// console.log("tipo de Layout Inválido");
+		// $('.layoutType').html("<h3 class='red'>Layout "+content.substr(4,3)+" inválido</h3>");
+		// contentResult = content;
+		// return;
 		break;
 	}
 
