@@ -1,0 +1,42 @@
+<html>
+    <head>
+        <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+        <script src="leasing.js"></script>
+    </head>
+    <body>
+        <form>
+            Produto Financeiro <select name="productType" id="productType">
+                <option value="leasing">Leasing</option>
+                <option value="cdc">CDC</option>
+            </select>
+            <Br><Br>
+            valor Financiado <input type="text" name="valorFinanciado" id="valorFinanciado" value="800000"><br>
+            Prazo Operação <input type="text" name="prazoOperação" id="prazoOperacao" value="48">¨meses<br>
+            Carencia <input type="text" name="carencia" id="carencia" value="0"> meses<br>
+            Amortização <Select name="amortizacao" id="amortizacao" onchange="calculate();">
+                <option value="1">Mensal</option>
+                <option value="6">Semestral</option>
+                <option value="12" selected>Anual</option>
+            </Select><br>
+            Juros Mensal <input type="text" id="jurosMensal" value="1.20"> & a.m.<br>
+            TAC <input type="text" id="tac" value="1000"><br>
+            VRG Diluido <input type="text" id="vrgDiluido" value = "99"> %<br>
+            ISS <Select name="iss" id="iss" onchange="calculate();">
+                    <option value="0">0%</option>
+                    <option value="2">2%</option>
+                    <option value="3">3%</option>
+                    <option value="4">4%</option>
+                    <option value="5">5%</option>
+                </Select><br>            
+            <br><br>
+            <a onclick="calculate();">Calculate!</a><Br><br><br>
+                <h1><B><span id="productTypeSpan"></span></B><Br></h1>
+                <B>PMT: </B><span id="PMT"></span><Br>
+                <b>residual: </b><span id="residual"></span><br>
+                <b>contraPrestacao: </b><span id="contraPrestacao"></span><br>
+                <b>contraPrestacao c/ ISS: </b><span id="contraPrestacaoIss"></span><br>
+                <b>PMT c/ ISS: </b><span id="pmtiss"></span><br>
+        </form>
+        <script>calculate();</script>
+    </body>
+</html>
