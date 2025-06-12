@@ -87,9 +87,8 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
     const popupContent = `
       <div class="custom-popup">
         <img class="flag" src="https://flagcdn.com/${airport.country.toLowerCase()}.svg" alt="${airport.country} Flag"><br>
-        <b>${airport.name}</b><br>
-        City: ${airport.city}<br>
-        Airport: ${airport.code}<br>
+        <b>${airport.name}</b>, ${airport.code}<br>
+        ${airport.city}<br>
         Lounges: ${airport.lounges}<br>
         Companies: ${airport.companies.join(", ")}
       </div>
