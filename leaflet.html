@@ -1,10 +1,11 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Airport Coverage Map</title>
+  <title>Airport Coverage Satellite Map</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <style>
     #map { height: 600px; width: 100%; }
+    body { margin: 0; padding: 0; }
   </style>
 </head>
 <body>
@@ -15,8 +16,9 @@
 <script>
   const map = L.map('map').setView([20, 0], 2);
 
-  L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
-    attribution: '&copy; OpenStreetMap, CARTO'
+  // Using Esri World Imagery (Satellite)
+  L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
   }).addTo(map);
 
   const airports = [
@@ -33,7 +35,7 @@
       radius: 10,
       color: "#007bff",
       fillColor: "#007bff",
-      fillOpacity: 0.3
+      fillOpacity: 0.5
     }).addTo(map);
 
     marker.bindPopup(`
