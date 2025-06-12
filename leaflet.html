@@ -1,6 +1,5 @@
 <!DOCTYPE html>
 <html>
-<head>
   <title>Airport Map with Custom Pins & Flags</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <style>
@@ -11,7 +10,7 @@
       position: relative;
       width: 32px;
       height: 32px;
-      background-color: #1A237E;
+      background-color: #1A237E; /* Dark blue */
       border: 3px solid #1A237E; /* Dark blue border */
       border-radius: 50% 50% 50% 0;
       transform: rotate(-45deg);
@@ -40,13 +39,10 @@
       width: 18px;
       height: 18px;
       border-radius: 50%;
-      border: 2px white;
-      top: 5px;
-      left: px;
+      border: 2px solid white;
       object-fit: cover;
     }
   </style>
-</head>
 <body>
 
 <div id="map"></div>
@@ -61,13 +57,13 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
   }).addTo(map);
 
   const airports = [
-    { code: "GRU", coords: [-23.4356, -46.4731], name: "São Paulo–Guarulhos", lounges: 2, companies: ["LATAM", "UA"], country: "BR" },
-    { code: "EWR", coords: [40.6895, -74.1745], name: "Newark Liberty", lounges: 5, companies: ["UA", "LH"], country: "US" },
-    { code: "LGA", coords: [40.7755, -73.8742], name: "LaGuardia Airport", lounges: 5, companies: ["UA", "LH"], country: "US" },
-    { code: "LAX", coords: [33.9416, -118.4085], name: "Los Angeles Intl", lounges: 4, companies: ["UA", "DL"], country: "US" },
-    { code: "SEA", coords: [47.4502, -122.3088], name: "Seattle–Tacoma Intl", lounges: 3, companies: ["UA", "LH"], country: "US" },
-    { code: "ORD", coords: [41.9742, -87.9073], name: "Chicago O'Hare", lounges: 6, companies: ["UA", "LH"], country: "US" },
-    { code: "FRA", coords: [50.0379, 8.5622], name: "Frankfurt Airport", lounges: 7, companies: ["LH"], country: "DE" }
+    { code: "GRU", coords: [-23.4356, -46.4731], name: "São Paulo–Guarulhos", lounges: 2, companies: ["LA", "UA"], city:"Guarulhos", country: "BR" },
+    { code: "EWR", coords: [40.6895, -74.1745], name: "Newark Liberty", lounges: 5, companies: ["UA", "LH"], city:"New York", country: "US" },
+    { code: "LGA", coords: [40.7755, -73.8742], name: "LaGuardia Airport", lounges: 5, companies: ["UA", "LH"], city:"New York", country: "US" },
+    { code: "LAX", coords: [33.9416, -118.4085], name: "Los Angeles Intl", lounges: 4, companies: ["UA", "DL"], city:"Los Angeles", country: "US" },
+    { code: "SEA", coords: [47.4502, -122.3088], name: "Seattle–Tacoma Intl", lounges: 3, companies: ["UA", "LH"], city:"Seattle", country: "US" },
+    { code: "ORD", coords: [41.9742, -87.9073], name: "Chicago O'Hare", lounges: 6, companies: ["UA", "LH"], city:"Chicago", country: "US" },
+    { code: "FRA", coords: [50.0379, 8.5622], name: "Frankfurt Airport", lounges: 7, companies: ["LH"],  city:"Frankfurt", country: "DE" }
   ];
 
   function createCustomIcon(countryCode) {
@@ -92,6 +88,7 @@ L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}.png', {
       <div class="custom-popup">
         <img class="flag" src="https://flagcdn.com/${airport.country.toLowerCase()}.svg" alt="${airport.country} Flag"><br>
         <b>${airport.name}</b><br>
+        City: ${airport.city}<br>
         Airport: ${airport.code}<br>
         Lounges: ${airport.lounges}<br>
         Companies: ${airport.companies.join(", ")}
