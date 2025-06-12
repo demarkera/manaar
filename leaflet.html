@@ -1,11 +1,48 @@
 <!DOCTYPE html>
 <html>
 <head>
-  <title>Airport Coverage Satellite Map</title>
+  <title>Airport Map with Custom Pins & Flags</title>
   <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
   <style>
     #map { height: 600px; width: 100%; }
     body { margin: 0; padding: 0; }
+
+    .pin {
+      position: relative;
+      width: 32px;
+      height: 32px;
+      background-color: white;
+      border: 3px solid #1A237E; /* Dark blue border */
+      border-radius: 50% 50% 50% 0;
+      transform: rotate(-45deg);
+      box-shadow: 0px 2px 4px rgba(0,0,0,0.3);
+    }
+ 
+
+    .pin img.flag {
+      position: absolute;
+      width: 18px;
+      height: 18px;
+      border-radius: 50%;
+      border: 2px solid #1A237E;
+      top: 4px;
+      left: 4px;
+      transform: rotate(45deg);
+      object-fit: cover;
+    }
+
+    .custom-popup {
+      text-align: center;
+      font-family: Arial, sans-serif;
+    }
+
+    .custom-popup img.flag {
+      width: 30px;
+      height: auto;
+      margin-bottom: 5px;
+      border-radius: 50%;
+      border: 2px solid #1A237E;
+    }
   </style>
 </head>
 <body>
@@ -16,34 +53,49 @@
 <script>
   const map = L.map('map').setView([20, 0], 2);
 
-  // Using Esri World Imagery (Satellite)
   L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
     attribution: 'Tiles &copy; Esri &mdash; Source: Esri, Maxar, Earthstar Geographics, and the GIS User Community'
   }).addTo(map);
 
   const airports = [
-    { code: "GRU", coords: [-23.4356, -46.4731], name: "São Paulo–Guarulhos", lounges: 2, companies: ["LATAM", "UA"] },
-    { code: "EWR", coords: [40.6895, -74.1745], name: "Newark Liberty", lounges: 5, companies: ["UA", "LH"] },
-    { code: "LAX", coords: [33.9416, -118.4085], name: "Los Angeles Intl", lounges: 4, companies: ["UA", "DL"] },
-    { code: "SEA", coords: [47.4502, -122.3088], name: "Seattle–Tacoma Intl", lounges: 3, companies: ["UA", "LH"] },
-    { code: "ORD", coords: [41.9742, -87.9073], name: "Chicago O'Hare", lounges: 6, companies: ["UA", "LH"] },
-    { code: "FRA", coords: [50.0379, 8.5622], name: "Frankfurt Airport", lounges: 7, companies: ["LH"] }
+    { code: "GRU", coords: [-23.4356, -46.4731], name: "São Paulo–Guarulhos", lounges: 2, companies: ["LATAM", "UA"], country: "BR" },
+    { code: "EWR", coords: [40.6895, -74.1745], name: "Newark Liberty", lounges: 5, companies: ["UA", "LH"], country: "US" },
+    { code: "LGA", coords: [40.7755, -73.8742], name: "LaGuardia Airport", lounges: 5, companies: ["UA", "LH"], country: "US" },
+    { code: "LAX", coords: [33.9416, -118.4085], name: "Los Angeles Intl", lounges: 4, companies: ["UA", "DL"], country: "US" },
+    { code: "SEA", coords: [47.4502, -122.3088], name: "Seattle–Tacoma Intl", lounges: 3, companies: ["UA", "LH"], country: "US" },
+    { code: "ORD", coords: [41.9742, -87.9073], name: "Chicago O'Hare", lounges: 6, companies: ["UA", "LH"], country: "US" },
+    { code: "FRA", coords: [50.0379, 8.5622], name: "Frankfurt Airport", lounges: 7, companies: ["LH"], country: "DE" }
   ];
 
+  function createCustomIcon(countryCode) {
+    return L.divIcon({
+      html: `
+        <div class="pin">
+          <img class="flag" src="https://flagcdn.com/${countryCode.toLowerCase()}.svg" alt="${countryCode}">
+        </div>`,
+      iconSize: [32, 42],
+      iconAnchor: [16, 42],
+      popupAnchor: [0, -42],
+      className: ''
+    });
+  }
+
   airports.forEach(airport => {
-    const marker = L.circleMarker(airport.coords, {
-      radius: 10,
-      color: "#007bff",
-      fillColor: "#007bff",
-      fillOpacity: 0.5
+    const marker = L.marker(airport.coords, {
+      icon: createCustomIcon(airport.country)
     }).addTo(map);
 
-    marker.bindPopup(`
-      <b>${airport.name}</b><br>
-      Airport: ${airport.code}<br>
-      Lounges: ${airport.lounges}<br>
-      Companies: ${airport.companies.join(", ")}
-    `);
+    const popupContent = `
+      <div class="custom-popup">
+        <img class="flag" src="https://flagcdn.com/${airport.country.toLowerCase()}.svg" alt="${airport.country} Flag"><br>
+        <b>${airport.name}</b><br>
+        Airport: ${airport.code}<br>
+        Lounges: ${airport.lounges}<br>
+        Companies: ${airport.companies.join(", ")}
+      </div>
+    `;
+
+    marker.bindPopup(popupContent);
   });
 </script>
 
