@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>BCBP Scanner • Scanbot</title>
+  <style>
+    html, body { margin:0; padding:0; height:100%; background:#0b0b0c; color:#eaeaea; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; }
+    header { padding:12px 16px; font-weight:700; }
+    #scanner { width:100%; height: calc(100dvh - 220px); background:#111; }
+    .panel { padding:12px 16px; border-top:1px solid #222; }
+    .kv { display:grid; grid-template-columns: 140px 1fr; gap:6px 12px; }
+    .kv b { color:#cfcfcf; }
+    pre { white-space: pre-wrap; word-wrap: break-word; background:#121212; padding:8px; border-radius:8px; }
+    .btns { padding:8px 16px 0 16px; display:flex; gap:8px; flex-wrap:wrap; }
+    button { padding:10px 12px; border-radius:10px; border:1px solid #2a2a2a; background:#1d1d1f; color:#fff; }
+  </style>
+</head>
+<body>
+  <header>BCBP Mobile Scanner (Scanbot)</header>
+
+  <div class="btns">
+    <button id="startBtn">Start Scanner</button>
+    <button id="stopBtn" disabled>Stop</button>
+  </div>
+
+  <div id="scanner"></div>
+
+  <div class="panel">
+    <h3>Raw decode</h3>
+    <pre id="raw">(no scan yet)</pre>
+  </div>
+
+  <div class="panel">
+    <h3>Parsed (Leg 1: primary block)</h3>
+    <div class="kv" id="kv"></div>
+  </div>
+
+  <!-- Scanbot Web SDK (CDN for quick POC; self-host for prod) -->
+  <script src="https://cdn.jsdelivr.net/npm/scanbot-web-sdk@latest/bundle/ScanbotSDK.min.js"></script>
+
+  <script>
+    // === Your Scanbot license key (as provided) ===
+    const LICENSE_KEY =
+  "FD4c096Sul5wTHUHpv8YkIhLwmSQua" +
+  "R7Z8yiV/Yv6hCpQhQxFy1AV7333Jzf" +
+  "C+EvW9zqLqJ80IP9VxpqAzSTcTFPSQ" +
+  "VUgaFZi4qQNZLq9/vs5j3Pq+sKhDDb" +
+  "CAC9LtYFmUPhgQ/FWaoTrdDq3q9IPI" +
+  "wHfjc7LkPuGhejvSFXZQ0MKFTbmCbw" +
+  "D1CMlTwx1xqafo/VG+nxzXIXED8TnM" +
+  "ZsV+DrEPFRXFcW8vqCIGH/0Pt3ydZ7" +
+  "LVlfKzmK2EZWio7xhkL3uq+CLEMtGa" +
+  "pl9qd70n9RH3rFdqMdF3IqyNDgAqbf" +
+  "+x39VGa3GnjqFHlvNDG1pqyLPP/MMK" +
+  "KcdTQxjZHvMA==\nU2NhbmJvdFNESw" +
+  "psb2NhbGhvc3R8b2JqZWN0ZWRnZS5j" +
+  "b20KMTc1OTg4MTU5OQo4Mzg4NjA3Cj" +
+  "g=\n";
+
+    let scanbotSDK;      // SDK instance
+    let scanner;         // Scanner instance
+    const startBtn = document.getElementById('startBtn');
+    const stopBtn  = document.getElementById('stopBtn');
+    const rawOut   = document.getElementById('raw');
+    const kv       = document.getElementById('kv');
+
+    // Minimal primary-block parser for IATA BCBP (leg 1)
+    function parseBCBPPrimary(raw) {
+      if (!raw || raw.length < 60) return { error: "Not enough data to parse primary fields." };
+      const fmt   = raw[0];                     // format code
+      const legs  = raw[1];                     // number of legs
+      const name  = raw.slice(2, 22).trim();    // 20 chars
+      const etkt  = raw[22];                    // E-ticket indicator
+      const pnr   = raw.slice(23, 30).trim();   // 7 chars
+      const from  = raw.slice(30, 33);
+      const to    = raw.slice(33, 36);
+      const mkt   = raw.slice(36, 39).trim();   // carrier (IATA 3)
+      const flt   = raw.slice(39, 44).trim();   // flight no
+      const jDay  = raw.slice(44, 47);          // Julian day
+      const cabin = raw[47];
+      const seat  = raw.slice(48, 52).trim();
+      const seq   = raw.slice(52, 57).trim();   // check-in seq
+      const stat  = raw[57];
+      return {
+        formatCode: fmt,
+        numberOfLegs: legs,
+        name,
+        electronicTicket: etkt,
+        pnr,
+        from, to,
+        marketingCarrier: mkt,
+        flightNumber: flt,
+        julianDate: jDay,
+        cabin, seat,
+        checkinSequence: seq,
+        passengerStatus: stat
+      };
+    }
+
+    function showKV(obj) {
+      kv.innerHTML = '';
+      if (!obj) return;
+      if (obj.error) {
+        kv.innerHTML = `<div><b>Error</b></div><div>${obj.error}</div>`;
+        return;
+      }
+      for (const [k, v] of Object.entries(obj)) {
+        const d1 = document.createElement('div'); d1.innerHTML = `<b>${k}</b>`;
+        const d2 = document.createElement('div'); d2.textContent = v ?? '';
+        kv.appendChild(d1); kv.appendChild(d2);
+      }
+    }
+
+    async function initSDK() {
+      if (scanbotSDK) return scanbotSDK;
+      // Initialize Scanbot SDK (enginePath via CDN for POC)
+      scanbotSDK = await ScanbotSDK.initialize({
+        licenseKey: LICENSE_KEY,
+        enginePath: "https://cdn.jsdelivr.net/npm/scanbot-web-sdk@latest/bundle/bin/complete/"
+      });
+      return scanbotSDK;
+    }
+
+    async function startScanner() {
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+      await initSDK();
+
+      // Restrict to typical BCBP carriers for speed & accuracy
+      const detectionParameters = {
+        barcodeFormatConfigurations: [
+          new ScanbotSDK.Config.BarcodeFormatCommonConfiguration({
+            formats: ["PDF_417", "AZTEC", "QR_CODE", "DATA_MATRIX"]
+          })
+        ]
+      };
+
+      const configuration = {
+        containerId: 'scanner',
+        captureDelay: 600, // ms between callbacks
+        detectionParameters,
+        preferredCamera: 'environment',
+        showFinder: true,
+        onBarcodesDetected: (result) => {
+          if (!result?.barcodes?.length) return;
+          const first = result.barcodes[0];
+          rawOut.textContent = `${first.format}: ${first.text}`;
+          showKV(parseBCBPPrimary(first.text));
+          // Stop after first successful read (toggle this if you want continuous)
+          if (scanner) { scanner.dispose(); scanner = null; }
+          startBtn.disabled = false;
+          stopBtn.disabled = true;
+        },
+        onError: (e) => {
+          rawOut.textContent = `Error: ${e?.message || e}`;
+        }
+      };
+
+      scanner = await scanbotSDK.createBarcodeScanner(configuration);
+    }
+
+    function stopScanner() {
+      if (scanner) { scanner.dispose(); scanner = null; }
+      stopBtn.disabled = true;
+      startBtn.disabled = false;
+    }
+
+    startBtn.addEventListener('click', startScanner);
+    stopBtn.addEventListener('click', stopScanner);
+  </script>
+</body>
+</html>
