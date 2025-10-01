@@ -3,24 +3,26 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1" />
-  <title>BCBP Scanner • Scanbot (demarkera.github.io)</title>
+  <title>BCBP Scanner Lab • Scanbot + Dynamsoft</title>
   <style>
     html, body { margin:0; padding:0; height:100%; background:#0b0b0c; color:#eaeaea; font-family: system-ui, Segoe UI, Roboto, Arial, sans-serif; }
     header { padding:12px 16px; font-weight:700; }
-    #scanner { width:100%; height: calc(100dvh - 280px); background:#111; }
+    #scanner { width:100%; height: calc(100dvh - 320px); background:#111; }
     .panel { padding:12px 16px; border-top:1px solid #222; }
-    .kv { display:grid; grid-template-columns: 140px 1fr; gap:6px 12px; }
+    .kv { display:grid; grid-template-columns: 160px 1fr; gap:6px 12px; }
     .kv b { color:#cfcfcf; }
     pre { white-space: pre-wrap; word-wrap: break-word; background:#121212; padding:8px; border-radius:8px; }
     .btns { padding:8px 16px 0 16px; display:flex; gap:8px; flex-wrap:wrap; }
     button { padding:10px 12px; border-radius:10px; border:1px solid #2a2a2a; background:#1d1d1f; color:#fff; }
+    .badge { display:inline-block; padding:2px 8px; margin-left:8px; border-radius:999px; font-size:12px; background:#1e293b; }
   </style>
 </head>
 <body>
-  <header>BCBP Mobile Scanner (Scanbot)</header>
+  <header>BCBP Mobile Scanner Lab <span class="badge" id="sdkBadge">No SDK</span></header>
 
   <div class="btns">
-    <button id="initBtn">Init SDK</button>
+    <button id="initScanbotBtn">Scanbot SDK Init</button>
+    <button id="initDynamsoftBtn">Dynamsoft SDK Init</button>
     <button id="startBtn" disabled>Start Scanner</button>
     <button id="stopBtn" disabled>Stop</button>
   </div>
@@ -46,35 +48,22 @@
   <!-- Scanbot Web SDK (CDN). For production you can self-host the engine files. -->
   <script src="https://cdn.jsdelivr.net/npm/scanbot-web-sdk@latest/bundle/ScanbotSDK.min.js"></script>
 
+  <!-- Dynamsoft JS (self-hosted from your repo). Make sure these paths exist in GitHub Pages.
+       If you prefer a CDN, comment these two and use:
+       <script src="https://cdn.jsdelivr.net/npm/dynamsoft-barcode-reader@11.0.61/dist/dbr.js"></script>
+       <script src="https://cdn.jsdelivr.net/npm/dynamsoft-barcode-reader@11.0.61/dist/dbr.scanner.js"></script>
+  -->
+  <script src="./dynamsoft/dist/dbr.js"></script>
+  <script src="./dynamsoft/dist/dbr.scanner.js"></script>
+
   <script>
-    // === Your Scanbot license key (origin-locked to https://demarkera.github.io) ===
-    const LICENSE_KEY =
-  "TeQKYjVexG+hy9NH0pmh/1EDrFS71e" +
-  "SADkAXc1oNbgPksei2EZF/fAISvm10" +
-  "UGMdgrRrph1yvqyLv8NTjndYxTU5od" +
-  "o2GdLYNb2hF0x93CWCTvXmzqehOon6" +
-  "U5puIXSTKSuXRfZs6jYAE24SsDmABZ" +
-  "iVpw822LudGZVUdHsXBhvPKra6UFRX" +
-  "qhIlc+tNOVEmWLaflaBpEN/70/iO4Y" +
-  "yVbINhDjVv7+LPtR6dCk2luP8nYdx3" +
-  "VMpwmYMd4Su49qUoDzsF/y9XkFm7GC" +
-  "KH2sWkqTRGe6sc397eX6v9/t6xJyaq" +
-  "dE2bW5FuWRPRUuFOCmASwZXWy+y3dZ" +
-  "KxRwlAxVDjdA==\nU2NhbmJvdFNESw" +
-  "psb2NhbGhvc3R8ZGVtYXJrZXJhLmdp" +
-  "dGh1Yi5pbwoxNzU5ODgxNTk5CjgzOD" +
-  "g2MDcKOA==\n";
-
-    let scanbotSDK;  // SDK instance
-    let scanner;     // Scanner instance
-
-    const initBtn = document.getElementById('initBtn');
-    const startBtn = document.getElementById('startBtn');
-    const stopBtn  = document.getElementById('stopBtn');
-    const rawOut   = document.getElementById('raw');
-    const kv       = document.getElementById('kv');
+    // ===================== Config & State =====================
+    const sdkBadge = document.getElementById('sdkBadge');
     const diagKV   = document.getElementById('diagKV');
     const diagLog  = document.getElementById('diagLog');
+    const rawOut   = document.getElementById('raw');
+    const kv       = document.getElementById('kv');
+    const containerId = 'scanner';
 
     function log(msg) {
       diagLog.textContent += `${new Date().toISOString()}  ${msg}\n`;
@@ -110,48 +99,55 @@
                cabin, seat, checkinSequence: seq, passengerStatus: stat };
     }
 
-    async function initSDK() {
-      if (scanbotSDK) return;
+    // Shared UI helpers
+    function showResult(text) {
+      rawOut.textContent = text;
+      showKV(kv, parseBCBPPrimary(text));
+    }
+    function setActiveSDK(label) {
+      sdkBadge.textContent = label || 'No SDK';
+    }
 
+    // ===================== Scanbot Wiring =====================
+    const SCANBOT_LICENSE =
+`TeQKYjVexG+hy9NH0pmh/1EDrFS71eSADkAXc1oNbgPksei2EZF/fAISvm10UGMdgrRrph1yvqyLv8NTjndYxTU5odo2GdLYNb2hF0x93CWCTvXmzqehOon6U5puIXSTKSuXRfZs6jYAE24SsDmABZiVpw822LudGZVUdHsXBhvPKra6UFRXqhIlc+tNOVEmWLaflaBpEN/70/iO4YyVbINhDjVv7+LPtR6dCk2luP8nYdx3VMpwmYMd4Su49qUoDzsF/y9XkFm7GCKH2sWkqTRGe6sc397eX6v9/t6xJyqdE2bW5FuWRPRUuFOCmASwZXWy+y3dZKxRwlAxVDjdA==
+U2NhbmJvdFNESwpsb2NhbGhvc3R8ZGVtYXJrZXJhLmdpdGh1Yi5pbwoxNzU5ODgxNTk5CjgzODg2MDcKOA==`;
+
+    let scanbotSDK = null;
+    let scanbotScanner = null;
+
+    async function initScanbot() {
+      setActiveSDK('Scanbot (Ready)');
+      if (scanbotSDK) return;
       if (!('WebAssembly' in window)) {
         log('WebAssembly not supported in this browser.');
         alert('WebAssembly is not supported. Update your browser/OS.');
         return;
       }
-
       try {
-        // CDN is fine for GitHub Pages. For self-hosting, see note below.
         scanbotSDK = await ScanbotSDK.initialize({
-          licenseKey: LICENSE_KEY,
+          licenseKey: SCANBOT_LICENSE,
           enginePath: "https://cdn.jsdelivr.net/npm/scanbot-web-sdk@latest/bundle/bin/complete/"
-          // For self-hosting in your repo:
-          // enginePath: "./scanbot/bin/complete/"  // (place the bin/complete folder inside your repo and commit it)
+          // For self-hosting inside your repo:
+          // enginePath: "./scanbot/bin/complete/"
         });
-        log('Scanbot SDK initialized.');
         const info = await scanbotSDK.getLicenseInfo();
         showKV(diagKV, {
+          activeSDK: 'Scanbot',
           licenseValid: info.isLicenseValid,
           licenseStatus: info.status,
           licenseExpiry: info.expiryDate,
-          pageOrigin: location.origin
+          origin: location.origin
         });
-        if (!info.isLicenseValid) {
-          log('License invalid for this origin. Verify the key matches https://demarkera.github.io.');
-        }
-        startBtn.disabled = true; // require a user gesture on iOS: press "Start Scanner"
-        initBtn.disabled = true;
+        log('Scanbot initialized.');
         startBtn.disabled = false;
       } catch (e) {
-        log('SDK init failed: ' + (e && e.message ? e.message : e));
-        alert('Scanbot SDK failed to initialize.\n\nCommon causes:\n• License not valid for this origin\n• Engine files blocked (CORS/MIME/CSP)\n• Non-HTTPS context');
+        log('Scanbot init failed: ' + (e?.message || e));
+        alert('Scanbot failed to initialize. Check license/origin and enginePath.');
       }
     }
 
-    async function startScanner() {
-      if (!scanbotSDK) return;
-      startBtn.disabled = true;
-      stopBtn.disabled = false;
-
+    async function startScanbotScanner() {
       const detectionParameters = {
         barcodeFormatConfigurations: [
           new ScanbotSDK.Config.BarcodeFormatCommonConfiguration({
@@ -159,9 +155,8 @@
           })
         ]
       };
-
       const configuration = {
-        containerId: 'scanner',
+        containerId,
         captureDelay: 600,
         detectionParameters,
         preferredCamera: 'environment',
@@ -169,48 +164,160 @@
         onBarcodesDetected: (result) => {
           if (!result?.barcodes?.length) return;
           const first = result.barcodes[0];
-          rawOut.textContent = `${first.format}: ${first.text}`;
-          showKV(kv, parseBCBPPrimary(first.text));
+          showResult(`${first.format}: ${first.text}`);
 
-          // Samsung S24 fix: dispose after the callback returns
+          // Samsung-safe shutdown
           setTimeout(() => {
-            if (scanner) {
-              scanner.dispose();
-              scanner = null;
-              log('Scanner disposed after first result.');
+            if (scanbotScanner) {
+              scanbotScanner.dispose();
+              scanbotScanner = null;
+              log('Scanbot scanner disposed.');
               startBtn.disabled = false;
               stopBtn.disabled = true;
             }
           }, 200);
         },
-        onError: (e) => {
-          log('Scanner error: ' + (e?.message || e));
+        onError: (e) => log('Scanbot scanner error: ' + (e?.message || e))
+      };
+      scanbotScanner = await scanbotSDK.createBarcodeScanner(configuration);
+      log('Scanbot scanner started.');
+    }
+
+    function stopScanbotScanner() {
+      if (scanbotScanner) {
+        scanbotScanner.dispose();
+        scanbotScanner = null;
+        log('Scanbot scanner stopped by user.');
+      }
+    }
+
+    // ===================== Dynamsoft Wiring =====================
+    // Your Dynamsoft DLS key (provided)
+    const DYNAMSOFT_LICENSE = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMTA0NjA1NzgyLU1UQTBOakExTnpneUxYZGxZaTFVY21saGJGQnliMm8iLCJtYWluU2VydmVyVVJMIjoiaHR0cHM6Ly9tZGxzLmR5bmFtc29mdG9ubGluZS5jb20iLCJvcmdhbml6YXRpb25JRCI6IjEwNDYwNTc4MiIsInN0YW5kYnlTZXJ2ZXJVUkwiOiJodHRwczovL3NkbHMuZHluYW1zb2Z0b25saW5lLmNvbSIsImNoZWNrQ29kZSI6MTAyNzc4NDA0Nn0=";
+
+    let dynamsoftScanner = null;
+    let dynamsoftReady = false;
+
+    async function initDynamsoft() {
+      setActiveSDK('Dynamsoft (Ready)');
+      try {
+        if (window.Dynamsoft && Dynamsoft.DBR) {
+          // Point engine resources to your self-hosted dist folder
+          const enginePath = "./dynamsoft/dist/";
+          Dynamsoft.DBR.BarcodeReader.engineResourcePath = enginePath;
+          Dynamsoft.DBR.BarcodeScanner.engineResourcePath = enginePath;
+          // Assign license (DLS key works with both Reader & Scanner)
+          Dynamsoft.DBR.BarcodeReader.license = DYNAMSOFT_LICENSE;
+          Dynamsoft.DBR.BarcodeScanner.license = DYNAMSOFT_LICENSE;
+
+          // (Optional) diagnostics
+          const ver = Dynamsoft.DBR.BarcodeReader.version || 'unknown';
+          showKV(diagKV, {
+            activeSDK: 'Dynamsoft',
+            version: ver,
+            origin: location.origin,
+            enginePath
+          });
+          log('Dynamsoft initialized.');
+          dynamsoftReady = true;
+          startBtn.disabled = false;
+        } else {
+          log('Dynamsoft scripts not found. Verify dbr.js & dbr.scanner.js paths.');
+          alert('Dynamsoft scripts not found. Ensure ./dynamsoft/dist/dbr.js and dbr.scanner.js are accessible.');
         }
+      } catch (e) {
+        log('Dynamsoft init failed: ' + (e?.message || e));
+        alert('Dynamsoft failed to initialize. Check paths & license.');
+      }
+    }
+
+    async function startDynamsoftScanner() {
+      dynamsoftScanner = await Dynamsoft.DBR.BarcodeScanner.createInstance();
+      dynamsoftScanner.setUIElement(document.getElementById(containerId));
+      await dynamsoftScanner.updateVideoSettings({ video: { facingMode: { ideal: "environment" }}});
+
+      // Restrict formats: PDF417, Aztec, QR, Data Matrix for BCBP
+      const BF = Dynamsoft.DBR.EnumBarcodeFormat;
+      const runtime = await dynamsoftScanner.getRuntimeSettings();
+      runtime.barcodeFormatIds = BF.BF_PDF417 | BF.BF_QR_CODE | BF.BF_AZTEC | BF.BF_DATAMATRIX;
+      runtime.barcodeFormatIds_2 = 0; // disable supplementary set
+      await dynamsoftScanner.updateRuntimeSettings(runtime);
+
+      // Handle results
+      dynamsoftScanner.onFrameRead = results => {
+        if (!results || results.length === 0) return;
+        const first = results[0];
+        showResult(`${first.barcodeFormatString || 'UNKNOWN'}: ${first.barcodeText}`);
+
+        // Samsung-safe shutdown
+        setTimeout(async () => {
+          if (dynamsoftScanner) {
+            await dynamsoftScanner.close();           // stop camera + scanning
+            await dynamsoftScanner.destroyContext?.(); // free engine if available
+            dynamsoftScanner = null;
+            log('Dynamsoft scanner closed.');
+            startBtn.disabled = false;
+            stopBtn.disabled = true;
+          }
+        }, 200);
       };
 
-      try {
-        scanner = await scanbotSDK.createBarcodeScanner(configuration);
-        log('Scanner started.');
-      } catch (e) {
-        log('Failed to create scanner: ' + (e?.message || e));
+      await dynamsoftScanner.open(); // starts camera + scanning
+      log('Dynamsoft scanner started.');
+    }
+
+    async function stopDynamsoftScanner() {
+      if (dynamsoftScanner) {
+        await dynamsoftScanner.close();
+        await dynamsoftScanner.destroyContext?.();
+        dynamsoftScanner = null;
+        log('Dynamsoft scanner stopped by user.');
+      }
+    }
+
+    // ===================== Controller (switcher) =====================
+    let currentSDK = null; // 'scanbot' | 'dynamsoft'
+
+    const initScanbotBtn   = document.getElementById('initScanbotBtn');
+    const initDynamsoftBtn = document.getElementById('initDynamsoftBtn');
+    const startBtn         = document.getElementById('startBtn');
+    const stopBtn          = document.getElementById('stopBtn');
+
+    initScanbotBtn.addEventListener('click', async () => {
+      await initScanbot();
+      currentSDK = 'scanbot';
+      setActiveSDK('Scanbot (Ready)');
+    });
+
+    initDynamsoftBtn.addEventListener('click', async () => {
+      await initDynamsoft();
+      currentSDK = 'dynamsoft';
+      setActiveSDK('Dynamsoft (Ready)');
+    });
+
+    startBtn.addEventListener('click', async () => {
+      startBtn.disabled = true;
+      stopBtn.disabled = false;
+      if (currentSDK === 'scanbot') {
+        await startScanbotScanner();
+      } else if (currentSDK === 'dynamsoft') {
+        await startDynamsoftScanner();
+      } else {
+        alert('Initialize an SDK first (Scanbot or Dynamsoft).');
         startBtn.disabled = false;
         stopBtn.disabled = true;
       }
-    }
+    });
 
-    function stopScanner() {
-      if (scanner) {
-        scanner.dispose();
-        scanner = null;
-        log('Scanner stopped by user.');
+    stopBtn.addEventListener('click', async () => {
+      if (currentSDK === 'scanbot') {
+        stopScanbotScanner();
+      } else if (currentSDK === 'dynamsoft') {
+        await stopDynamsoftScanner();
       }
       stopBtn.disabled = true;
       startBtn.disabled = false;
-    }
-
-    initBtn.addEventListener('click', initSDK);
-    startBtn.addEventListener('click', startScanner);
-    stopBtn.addEventListener('click', stopScanner);
+    });
   </script>
 </body>
 </html>
