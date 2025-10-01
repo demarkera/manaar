@@ -45,10 +45,10 @@
     <div class="kv" id="kv"></div>
   </div>
 
-  <!-- Scanbot Web SDK (CDN). For production you can self-host the engine files. -->
+  <!-- Scanbot Web SDK (CDN). Self-host engine for prod if you prefer -->
   <script src="https://cdn.jsdelivr.net/npm/scanbot-web-sdk@latest/bundle/ScanbotSDK.min.js"></script>
 
-  <!-- Dynamsoft JS (self-hosted from your repo). Make sure these paths exist in GitHub Pages.
+  <!-- Dynamsoft JS (self-hosted from your repo). Make sure the paths exist in GitHub Pages.
        If you prefer a CDN, comment these two and use:
        <script src="https://cdn.jsdelivr.net/npm/dynamsoft-barcode-reader@11.0.61/dist/dbr.js"></script>
        <script src="https://cdn.jsdelivr.net/npm/dynamsoft-barcode-reader@11.0.61/dist/dbr.scanner.js"></script>
@@ -192,23 +192,22 @@ U2NhbmJvdFNESwpsb2NhbGhvc3R8ZGVtYXJrZXJhLmdpdGh1Yi5pbwoxNzU5ODgxNTk5CjgzODg2MDcK
     }
 
     // ===================== Dynamsoft Wiring =====================
-    // Your Dynamsoft DLS key (provided)
-    const DYNAMSOFT_LICENSE = "DLS2eyJoYW5kc2hha2VDb2RlIjoiMTA0NjA1NzgyLU1UQTBOakExTnpneUxYZGxZaTFVY21saGJGQnliMm8iLCJtYWluU2VydmVyVVJMIjoiaHR0cHM6Ly9tZGxzLmR5bmFtc29mdG9ubGluZS5jb20iLCJvcmdhbml6YXRpb25JRCI6IjEwNDYwNTc4MiIsInN0YW5kYnlTZXJ2ZXJVUkwiOiJodHRwczovL3NkbHMuZHluYW1zb2Z0b25saW5lLmNvbSIsImNoZWNrQ29kZSI6MTAyNzc4NDA0Nn0=";
+    // Paste your Dynamsoft trial key here:
+    const DYNAMSOFT_LICENSE = "YOUR_DYNAMSOFT_LICENSE_KEY_HERE";
 
+    // We’ll initialize lazily on button click
     let dynamsoftScanner = null;
     let dynamsoftReady = false;
 
     async function initDynamsoft() {
       setActiveSDK('Dynamsoft (Ready)');
+
       try {
+        // Configure engine path to your self-hosted dist on GitHub Pages
         if (window.Dynamsoft && Dynamsoft.DBR) {
-          // Point engine resources to your self-hosted dist folder
-          const enginePath = "./dynamsoft/dist/";
-          Dynamsoft.DBR.BarcodeReader.engineResourcePath = enginePath;
-          Dynamsoft.DBR.BarcodeScanner.engineResourcePath = enginePath;
-          // Assign license (DLS key works with both Reader & Scanner)
-          Dynamsoft.DBR.BarcodeReader.license = DYNAMSOFT_LICENSE;
-          Dynamsoft.DBR.BarcodeScanner.license = DYNAMSOFT_LICENSE;
+          Dynamsoft.DBR.BarcodeScanner.engineResourcePath = "./dynamsoft/dist/";
+          Dynamsoft.DBR.BarcodeReader.productKeys = DYNAMSOFT_LICENSE; // or Dynamsoft.DBR.BarcodeScanner.license
+          log('Dynamsoft engine path set to ./dynamsoft/dist/');
 
           // (Optional) diagnostics
           const ver = Dynamsoft.DBR.BarcodeReader.version || 'unknown';
@@ -216,9 +215,8 @@ U2NhbmJvdFNESwpsb2NhbGhvc3R8ZGVtYXJrZXJhLmdpdGh1Yi5pbwoxNzU5ODgxNTk5CjgzODg2MDcK
             activeSDK: 'Dynamsoft',
             version: ver,
             origin: location.origin,
-            enginePath
+            enginePath: Dynamsoft.DBR.BarcodeScanner.engineResourcePath
           });
-          log('Dynamsoft initialized.');
           dynamsoftReady = true;
           startBtn.disabled = false;
         } else {
@@ -232,11 +230,13 @@ U2NhbmJvdFNESwpsb2NhbGhvc3R8ZGVtYXJrZXJhLmdpdGh1Yi5pbwoxNzU5ODgxNTk5CjgzODg2MDcK
     }
 
     async function startDynamsoftScanner() {
+      // Create a scanner with our container
       dynamsoftScanner = await Dynamsoft.DBR.BarcodeScanner.createInstance();
       dynamsoftScanner.setUIElement(document.getElementById(containerId));
+      // Prefer rear camera and limit to BCBP carriers for speed
       await dynamsoftScanner.updateVideoSettings({ video: { facingMode: { ideal: "environment" }}});
 
-      // Restrict formats: PDF417, Aztec, QR, Data Matrix for BCBP
+      // Restrict formats: PDF417, Aztec, QR, Data Matrix
       const BF = Dynamsoft.DBR.EnumBarcodeFormat;
       const runtime = await dynamsoftScanner.getRuntimeSettings();
       runtime.barcodeFormatIds = BF.BF_PDF417 | BF.BF_QR_CODE | BF.BF_AZTEC | BF.BF_DATAMATRIX;
@@ -252,7 +252,7 @@ U2NhbmJvdFNESwpsb2NhbGhvc3R8ZGVtYXJrZXJhLmdpdGh1Yi5pbwoxNzU5ODgxNTk5CjgzODg2MDcK
         // Samsung-safe shutdown
         setTimeout(async () => {
           if (dynamsoftScanner) {
-            await dynamsoftScanner.close();           // stop camera + scanning
+            await dynamsoftScanner.close();   // stop camera + scanning
             await dynamsoftScanner.destroyContext?.(); // free engine if available
             dynamsoftScanner = null;
             log('Dynamsoft scanner closed.');
