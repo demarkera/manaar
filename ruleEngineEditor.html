@@ -198,8 +198,13 @@
   };
   const CABIN_COL_PRED = (col) => {
     const nm = norm(col.name), id = norm(col.id);
-    return nm.includes("cabin") || id.includes("cabin");
+    return (nm == "cabin") || (id == "input-cabin");
   };
+  const CABINBRAND_COL_PRED = (col) => {
+    const nm = norm(col.name), id = norm(col.id);
+    return nm.includes("cabin brand") || id.includes("cabinbrand");
+  };
+
   const AIRPORT_COL_PRED = (col) => {
     const nm = norm(col.name), id = norm(col.id);
     return nm.includes("airportcode") || nm.includes("airportcode")
@@ -231,6 +236,7 @@
   // Catalogs harvested from data
   let airlineCatalog = []; // ["UA","AA",...]
   let cabinCatalog = [];   // ["ECONOMY","BUSINESS","FIRST",...] or dataset values
+  let cabinBrandCatalog = [];   // ["ECONOMY","BUSINESS","FIRST",...] or dataset values
   let airportCatalog = []; // harvested 3-letter codes from file (optional suggestions)
   let bundleCatalog = [];  // from dataset
   let clubCatalog = [];    // from dataset
@@ -369,6 +375,7 @@
     // Build catalogs
     airlineCatalog = buildCatalog(columns.filter(AIRLINE_COL_PRED), 2, true);
     cabinCatalog = buildCatalog(columns.filter(CABIN_COL_PRED), null, false);
+    cabinBrandCatalog = buildCatalog(columns.filter(CABINBRAND_COL_PRED), null, false);
     airportCatalog = buildCatalog(columns.filter(AIRPORT_COL_PRED), 3, true);
     bundleCatalog = buildCatalog(columns.filter(BUNDLE_COL_PRED), null, false);
     locationCatalog = buildCatalog(columns.filter(LOCATION_COL_PRED), null, false);
@@ -523,6 +530,7 @@
     const val = (r[col.id] ?? "");
     const isAir = AIRLINE_COL_PRED(col);
     const isCabin = CABIN_COL_PRED(col);
+    const isCabinBrand = CABINBRAND_COL_PRED(col);
     const isAirport = AIRPORT_COL_PRED(col);
     // Explicit mapping for ClubName, FFCode, BundleCode
     const isClub = CLUB_COL_PRED(col);
@@ -530,9 +538,9 @@
     const isBundle = BUNDLE_COL_PRED(col);
     const isLocation = LOCATION_COL_PRED(col);
     const isDate = DATE_COL_PRED(col);
-    const isMulti = isAir || isCabin || isAirport || isBundle || isClub || isFF || isLocation;
+    const isMulti = isAir || isCabin || isCabinBrand || isAirport || isBundle || isClub || isFF || isLocation;
 
-    const editor = editorFor(col, String(val), { isAir, isCabin, isAirport, isBundle, isClub, isFF, isMulti, isDate, isLocation });
+    const editor = editorFor(col, String(val), { isAir, isCabin, isCabinBrand, isAirport, isBundle, isClub, isFF, isMulti, isDate, isLocation });
     const pickBtn = (isMulti || isDate || isAirport) ? `<button class="ghost pick-values" data-key="${escapeAttr(col.id)}" type="button">${isDate ? "Pick date" : "Pick values"}</button>` : "";
 
     return `<div class="field">
@@ -626,6 +634,7 @@
     toast("Column duplicated: " + cloneObj.name);
     airlineCatalog = buildCatalog(columns.filter(AIRLINE_COL_PRED), 2, true);
     cabinCatalog = buildCatalog(columns.filter(CABIN_COL_PRED), null, false);
+    cabinBrandCatalog = buildCatalog(columns.filter(CABINBRAND_COL_PRED), null, false);
     airportCatalog = buildCatalog(columns.filter(AIRPORT_COL_PRED), 3, true);
     bundleCatalog = buildCatalog(columns.filter(BUNDLE_COL_PRED), null, false);
     locationCatalog = buildCatalog(columns.filter(LOCATION_COL_PRED), null, false);
@@ -645,7 +654,7 @@
   ];
 
   function editorFor(col, value, meta){
-    const { isAir, isCabin, isAirport, isBundle, isClub, isFF, isMulti, isDate, isLocation } = meta;
+    const { isAir, isCabin, isCabinBrand, isAirport, isBundle, isClub, isFF, isMulti, isDate, isLocation } = meta;
 
     if(isDate){
       return `<input class="cell pickerable" data-key="${escapeAttr(col.id)}" value="${escapeAttr(String(value))}" placeholder="e.g., >2025-01-01" />`;
@@ -653,11 +662,14 @@
     if (isCabin) {
       return `<input class="cell pickerable" data-key="${escapeAttr(col.id)}" value="${escapeAttr(String(value))}" placeholder='e.g., "F","J","Y"' />`;
     }
+    if(isCabinBrand) {
+      return `<input class="cell pickerable" data-key="${escapeAttr(col.id)}" value="${escapeAttr(String(value))}" placeholder='e.g., "Polaris","United Polaris business","United First" or leave blank for any' />`;
+    }
     if(isLocation){
       return `<input class="cell pickerable" data-key="${escapeAttr(col.id)}" value="${escapeAttr(String(value))}" placeholder='e.g., "DEPARTURE,ARRIVAL"' />`;
     }
     if(isAirport){
-      return `<input class="cell pickerable" data-key="${escapeAttr(col.id)}" value="${escapeAttr(String(value))}" placeholder='e.g., "JFK","LAX"' />`;
+      return `<input class="cell pickerable" data-key="${escapeAttr(col.id)}" value="${escapeAttr(String(value))}" placeholder='e.g., "JFK","LAX" or leave blank for any' />`;
     }
     if (isBundle) {
       return `<input class="cell pickerable" data-key="${escapeAttr(col.id)}" value="${escapeAttr(String(value))}" placeholder='e.g., "1002","2004"' />`;
@@ -669,7 +681,7 @@
       return `<input class="cell pickerable" data-key="${escapeAttr(col.id)}" value="${escapeAttr(String(value))}" placeholder='e.g., "5","G","*G","GS"' />`;
     }
     if(isAir){
-      return `<input class="cell pickerable" data-key="${escapeAttr(col.id)}" value="${escapeAttr(String(value))}" placeholder='e.g., "UA","AA"' />`;
+      return `<input class="cell pickerable" data-key="${escapeAttr(col.id)}" value="${escapeAttr(String(value))}" placeholder='e.g., "UA","AA" or leave blank for any' />`;
     }
     if(isMulti){
       return `<input class="cell pickerable" data-key="${escapeAttr(col.id)}" value="${escapeAttr(String(value))}" placeholder='e.g., "value1","value2"' />`;
@@ -702,6 +714,7 @@
     const col = columns.find(c => c.id === colId);
     if(AIRLINE_COL_PRED(col)) panelTarget.kind = "airline";
     else if(CABIN_COL_PRED(col)) panelTarget.kind = "cabin";
+    else if(CABINBRAND_COL_PRED(col)) panelTarget.kind = "cabinBrand";
     else if(AIRPORT_COL_PRED(col)) panelTarget.kind = "airport";
     else if(BUNDLE_COL_PRED(col)) panelTarget.kind = "bundle";
     else if(LOCATION_COL_PRED(col)) panelTarget.kind = "location";
@@ -749,6 +762,7 @@
     switch(panelTarget.kind){
       case "airline": items = airlineCatalog.slice(); break;
       case "cabin": items = cabinCatalog.slice(); break;
+      case "cabinBrand": items = cabinBrandCatalog.slice(); break;
       case "airport": items = airportCatalog.slice(); break;
       case "bundle": items = bundleCatalog.slice(); break;
       case "club": items = clubCatalog.slice(); break;
