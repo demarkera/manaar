@@ -1,0 +1,1051 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Zen Rules Editor — List & Detail (v6)</title>
+  <style>
+    :root { font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Helvetica, Arial, "Apple Color Emoji","Segoe UI Emoji"; }
+    body { margin: 0; }
+    header { display: flex; gap: 12px; flex-wrap: wrap; align-items: center; padding: 14px 16px; border-bottom: 1px solid #e5e7eb; }
+    .pill { background: #eef2ff; border: 1px solid #c7d2fe; color: #3730a3; border-radius: 999px; padding: 6px 10px; font-size: 12px; }
+    .muted { color: #6b7280; }
+    .spacer { flex: 1; }
+    select, button, input[type="text"], input[type="date"] { padding: 8px 12px; border-radius: 8px; border: 1px solid #e5e7eb; background: white; }
+    button.primary { background: #111827; color: white; border-color: #111827; }
+    button.danger { background: #b91c1c; color: white; border-color: #991b1b; }
+    button.ghost { background: white; border-color: #e5e7eb; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .layout { display: grid; grid-template-columns: 300px 1fr; min-height: calc(100vh - 60px); }
+    .left { border-right: 1px solid #e5e7eb; display: flex; flex-direction: column; }
+    .right { display: flex; flex-direction: column; }
+    .toolbar { display: flex; gap: 8px; padding: 10px 12px; align-items: center; }
+    .toolbar.stack { flex-direction: column; align-items: stretch; gap: 6px; }
+    .search { display: flex; gap: 8px; }
+    .actions { display: flex; gap: 8px; }
+    .list { overflow-y: auto; overscroll-behavior: contain; }
+    .rule { display: grid; grid-template-columns: 1fr auto; gap: 6px; padding: 10px 12px; border-bottom: 1px solid #f1f5f9; cursor: pointer; }
+    .rule:hover { background: #f9fafb; }
+    .rule.active { background: #eef2ff; }
+    .tag { font-size: 10px; padding: 2px 6px; border-radius: 999px; border: 1px solid #e5e7eb; color: #374151; background: #f9fafb; }
+    .hit { color: #111827; font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+    .detail-wrap { overflow: auto; padding: 16px; }
+    .h1 { font-size: 18px; font-weight: 700; margin-bottom: 8px; display:flex; align-items:center; gap:8px; }
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin: 8px 0; }
+    .field { display: grid; grid-template-columns: 220px 1fr auto; gap: 8px; align-items: center; margin: 4px 0; }
+    .label { display:flex; flex-direction:column; gap: 2px; }
+    .label b { font-size: 13px; }
+    .label .mini { font-size: 11px; color:#6b7280; }
+    .input-col { background: #ecfeff; border: 1px solid #a5f3fc; padding: 10px; border-radius: 10px; }
+    .output-col { background: #f5f3ff; border: 1px solid #ddd6fe; padding: 10px; border-radius: 10px; }
+    .sect { margin-top: 12px; }
+    .sect h3 { font-size: 14px; margin: 0 0 8px 0; }
+    .cell { width: 100%; box-sizing: border-box; border: 1px solid #e5e7eb; padding: 8px; border-radius: 8px; background: white; }
+    .right-toolbar { display:flex; gap:8px; align-items:center; padding: 8px 16px; border-bottom: 1px solid #e5e7eb; }
+    .columns-panel { display:grid; grid-template-columns: 1fr; gap: 6px; }
+    .col-chip { display:flex; align-items:center; gap:8px; padding:6px 8px; border:1px solid #e5e7eb; border-radius:8px; background:#fff; }
+    .drag { cursor: grab; user-select:none; }
+    .dup { margin-left:auto; }
+    .checkbox { width: 16px; height: 16px; }
+
+    .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+    .chip { display: inline-flex; align-items: center; gap: 6px; padding: 4px 8px; border: 1px solid #e5e7eb; border-radius: 999px; background: #fff; font-size: 12px; }
+    .chip .x { cursor: pointer; }
+
+    .toast { position: fixed; right: 16px; bottom: 16px; background: #111827; color: #fff; padding: 10px 12px; border-radius: 10px; opacity: 0; transform: translateY(8px); transition: all .25s ease; }
+    .toast.show { opacity: 1; transform: translateY(0); }
+    .err { background: #991b1b; }
+
+    /* Sidepanel (Generic Picker) */
+    .panel-mask { position: fixed; inset: 0; background: rgba(0,0,0,0.2); opacity: 0; pointer-events: none; transition: opacity .2s ease; }
+    .panel-mask.show { opacity: 1; pointer-events: auto; }
+    .panel { position: fixed; top: 0; right: -420px; width: 400px; height: 100vh; background: white; border-left: 1px solid #e5e7eb; box-shadow: -8px 0 24px rgba(0,0,0,0.06); transition: right .25s ease; display:flex; flex-direction:column; }
+    .panel.show { right: 0; }
+    .panel-hd { display:flex; align-items:center; gap:8px; padding: 12px; border-bottom: 1px solid #e5e7eb; }
+    .panel-bd { padding: 12px; display:grid; grid-template-rows: auto auto auto 1fr auto; gap: 10px; overflow:hidden; }
+    .panel-list { overflow:auto; border:1px solid #e5e7eb; border-radius: 10px; padding: 8px; min-height: 120px; }
+    .panel-list .item { padding: 6px 8px; border: 1px solid #e5e7eb; border-radius: 8px; margin: 6px 0; display:flex; align-items:center; justify-content:space-between; cursor: grab;}
+    .panel-list .item:active { cursor: grabbing; }
+    .panel-drop { min-height: 120px; border: 2px dashed #cbd5e1; border-radius: 12px; padding: 8px; }
+    .panel-actions { display:flex; gap:8px; justify-content: flex-end; }
+
+    /* Date panel */
+    .panel-bd-date { padding: 12px; display:grid; grid-template-rows: auto auto 1fr auto; gap: 10px; overflow:hidden; }
+    .helper { font-size: 12px; color:#6b7280; }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="pill">Zen Rules Editor — List & Detail (v6)</div>
+    <select id="tablePicker" title="Pick a decision table" disabled></select>
+    <div class="spacer"></div>
+    <button id="btnDownload" class="primary" disabled>Save JSON</button>
+  </header>
+
+  <div class="layout">
+    <section class="left">
+      <div class="toolbar">
+        <input id="fileInput" type="file" accept="application/json" />
+      </div>
+      <div class="toolbar stack">
+        <div class="search">
+          <input id="searchBox" type="text" placeholder="Filter rules by text…" />
+        </div>
+        <div class="actions">
+          <button id="btnAdd" title="Add new rule">Add</button>
+          <button id="btnDup" title="Duplicate selected rule">Duplicate</button>
+          <button id="btnDel" class="danger" title="Delete selected rule">Delete</button>
+        </div>
+      </div>
+      <div id="list" class="list"></div>
+    </section>
+
+    <section class="right">
+      <div class="right-toolbar">
+        <span id="meta" class="muted"></span>
+        <div class="spacer"></div>
+        <details id="colsToggle">
+          <summary>Fields panel</summary>
+          <div class="columns-panel" id="colsPanel"></div>
+        </details>
+      </div>
+      <div class="detail-wrap" id="detail">
+        <div class="muted">Load a JSON and select a rule to edit.</div>
+      </div>
+    </section>
+  </div>
+
+  <!-- Generic picker sidepanel (Airline, Cabin, Airport, BundleCode, ClubName, FFCode, etc.) -->
+  <div id="panelMask" class="panel-mask"></div>
+  <div id="pickerPanel" class="panel" aria-hidden="true">
+    <div class="panel-hd">
+      <strong id="panelTitle">Pick values</strong>
+      <span id="panelFieldLabel" class="muted"></span>
+      <div class="spacer"></div>
+      <button id="panelClose" class="ghost">Close</button>
+    </div>
+    <div id="pickerBody" class="panel-bd">
+      <input id="pickerSearch" type="text" placeholder="Search…" />
+      <div class="muted">Drag items into the selection below, click to add, or add a custom value:</div>
+      <div style="display:flex; gap:8px;">
+        <input id="pickerCustom" class="cell" placeholder="Type a custom value and press Add" />
+        <button id="pickerAddCustom" class="ghost">Add</button>
+      </div>
+      <div id="pickerList" class="panel-list"></div>
+      <div>
+        <div class="muted" style="margin:4px 0">Selected</div>
+        <div id="pickerDrop" class="panel-drop">
+          <div id="selectedChips" class="chips"></div>
+        </div>
+      </div>
+      <div class="panel-actions">
+        <button id="panelClear" class="ghost">Clear</button>
+        <button id="panelApply" class="primary">Apply</button>
+      </div>
+    </div>
+    <!-- Date mode body (hidden until used) -->
+    <div id="dateBody" class="panel-bd-date" style="display:none;">
+      <div class="helper">Choose how to compare the date and set the day.</div>
+      <div style="display:flex; gap:8px; align-items:center;">
+        <label>Compare</label>
+        <select id="dateComparator">
+          <option value=""></option>
+          <option value=">">Greater than</option>
+          <option value="<">Less than</option>
+        </select>
+        <label>Date</label>
+        <input id="datePicker" type="date" />
+      </div>
+      <div class="helper">We’ll write the value as <code>&gt;YYYY-MM-DD</code> or <code>&lt;YYYY-MM-DD</code>. Leave blank to clear.</div>
+      <div class="panel-actions">
+        <button id="dateClear" class="ghost">Clear</button>
+        <button id="dateApply" class="primary">Apply</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+<script>
+(function(){
+  /* ====== State ====== */
+  let originalDoc = null;
+  let decisionTables = [];
+  let activeIndex = -1;
+
+  let columns = [];          // UI order: [{id, name, kind}]
+  let hiddenCols = new Set();
+  let rowExtraById = new Map();
+
+  let rules = [];            // dt.content.rules
+  let selectedRuleId = null; // currently open in detail
+
+  // Normalize helper
+  const norm = (s)=>String(s||"").toLowerCase().replace(/[\s_]+/g,"");
+
+  // Explicit field id/name matches for pickers
+  const EXPLICIT_PICKER_FIELDS = new Set([
+    "departureairportcode","arrivalairportcode","clubname","ffcode","bundlecode","loungelocation"
+  ]);
+
+  // Field category predicates
+  const AIRLINE_COL_PRED = (col) => {
+    const nm = norm(col.name);
+    const id = norm(col.id);
+    return nm.includes("airline") || nm.includes("operator")
+        || id.includes("airline") || id.includes("operatorcode") || id.includes("ff_airline");
+  };
+  const CABIN_COL_PRED = (col) => {
+    const nm = norm(col.name), id = norm(col.id);
+    return nm.includes("cabin") || id.includes("cabin");
+  };
+  const AIRPORT_COL_PRED = (col) => {
+    const nm = norm(col.name), id = norm(col.id);
+    return nm.includes("airportcode") || nm.includes("airportcode")
+        || id.includes("airportcode") || id.includes("airportcode")
+        || id.endsWith("airportcode") || id.endsWith("airportcode")
+        || EXPLICIT_PICKER_FIELDS.has(id); // include explicit dep/arr names
+  };
+  const BUNDLE_COL_PRED = (col) => {
+    const nm = norm(col.name), id = norm(col.id);
+    return nm.includes("bundlecode") || id.includes("bundlecode") || EXPLICIT_PICKER_FIELDS.has(id);
+  };
+  const LOCATION_COL_PRED = (col) => {
+    const nm = norm(col.name), id = norm(col.id);
+    return nm.includes("loungelocation") || id.includes("loungelocation") || EXPLICIT_PICKER_FIELDS.has(id);
+  };
+  const CLUB_COL_PRED = (col) => {
+    const nm = norm(col.name), id = norm(col.id);
+    return nm.includes("clubname") || id.includes("clubname") || EXPLICIT_PICKER_FIELDS.has(id);
+  };
+  const FFCODE_COL_PRED = (col) => {
+    const nm = norm(col.name), id = norm(col.id);
+    return nm.includes("ffcode") || id.includes("ffcode") || EXPLICIT_PICKER_FIELDS.has(id);
+  };
+  const DATE_COL_PRED = (col) => {
+    const id = norm(col.id), nm = norm(col.name);
+    return id === "rulestartdate" || id === "ruleenddate" || nm === "rulestartdate" || nm === "ruleenddate";
+  };
+
+  // Catalogs harvested from data
+  let airlineCatalog = []; // ["UA","AA",...]
+  let cabinCatalog = [];   // ["ECONOMY","BUSINESS","FIRST",...] or dataset values
+  let airportCatalog = []; // harvested 3-letter codes from file (optional suggestions)
+  let bundleCatalog = [];  // from dataset
+  let clubCatalog = [];    // from dataset
+  let ffcodeCatalog = [];  // from dataset
+
+  // Sidepanel working state
+  let panelOpen = false;
+  let panelTarget = { ruleId: null, colId: null, kind: "generic" }; // kind: airline|cabin|airport|bundle|club|ffcode|generic|date
+
+  /* ====== El helpers ====== */
+  const $ = (sel) => document.querySelector(sel);
+  const $$ = (sel) => Array.from(document.querySelectorAll(sel));
+
+  const fileInput = $("#fileInput");
+  const tablePicker = $("#tablePicker");
+  const btnDownload = $("#btnDownload");
+
+  const list = $("#list");
+  const detail = $("#detail");
+  const colsPanel = $("#colsPanel");
+  const meta = $("#meta");
+  const toastEl = $("#toast");
+
+  const searchBox = $("#searchBox");
+  const btnAdd = $("#btnAdd");
+  const btnDup = $("#btnDup");
+  const btnDel = $("#btnDel");
+
+  // Panel elements
+  const panelMask = $("#panelMask");
+  const pickerPanel = $("#pickerPanel");
+  const pickerBody = $("#pickerBody");
+  const dateBody = $("#dateBody");
+  const pickerList = $("#pickerList");
+  const selectedChips = $("#selectedChips");
+  const panelClose = $("#panelClose");
+  const panelApply = $("#panelApply");
+  const panelClear = $("#panelClear");
+  const pickerSearch = $("#pickerSearch");
+  const panelFieldLabel = $("#panelFieldLabel");
+  const panelTitle = $("#panelTitle");
+  const pickerDrop = $("#pickerDrop");
+  const pickerCustom = $("#pickerCustom");
+  const pickerAddCustom = $("#pickerAddCustom");
+
+  // Date controls
+  const dateComparator = $("#dateComparator");
+  const datePicker = $("#datePicker");
+  const dateApply = $("#dateApply");
+  const dateClear = $("#dateClear");
+
+  fileInput.addEventListener("change", handleFile);
+  tablePicker.addEventListener("change", () => { activeIndex = Number(tablePicker.value); hydrateFromActive(); });
+  btnDownload.addEventListener("click", onSaveJson);
+  searchBox?.addEventListener("input", renderList);
+  btnAdd.addEventListener("click", addRule);
+  btnDup.addEventListener("click", duplicateRule);
+  btnDel.addEventListener("click", deleteRule);
+
+  panelClose.addEventListener("click", closePanel);
+  panelMask.addEventListener("click", closePanel);
+  panelApply.addEventListener("click", applyPanel);
+  panelClear.addEventListener("click", clearPanel);
+  pickerSearch.addEventListener("input", renderPickerList);
+  pickerDrop.addEventListener("dragover", (e)=>{ e.preventDefault(); pickerDrop.style.background="#eef2ff"; });
+  pickerDrop.addEventListener("dragleave", ()=>{ pickerDrop.style.background="transparent"; });
+  pickerDrop.addEventListener("drop", onDropToken);
+  pickerAddCustom.addEventListener("click", () => {
+    const v = normalizeToken(pickerCustom.value, panelTarget.kind);
+    if(!v) return;
+    addSelectedToken(v);
+    pickerCustom.value = "";
+  });
+  dateApply.addEventListener("click", applyDate);
+  dateClear.addEventListener("click", clearDate);
+
+  function handleFile(evt){
+    const f = evt.target.files[0];
+    if(!f) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+      try{
+        const json = JSON.parse(reader.result);
+        boot(json);
+      } catch(e){
+        alert("Invalid JSON: " + e.message);
+      }
+    };
+    reader.readAsText(f);
+  }
+
+  function boot(json){
+    originalDoc = json;
+    decisionTables = (json.nodes || []).map((node, idx) => ({node, idx})).filter(x => x.node.type === "decisionTableNode");
+    if(decisionTables.length === 0){
+      disableUI();
+      list.innerHTML = "<div class='muted' style='padding:12px'>No <code>decisionTableNode</code> found.</div>";
+      detail.innerHTML = "<div class='muted'>—</div>";
+      return;
+    }
+    tablePicker.innerHTML = decisionTables.map((dt, i) => {
+      const name = dt.node.name || ("Decision Table " + (i+1));
+      return `<option value="${i}">${escapeHtml(name)}</option>`;
+    }).join("");
+    tablePicker.disabled = true; // enable after hydrate
+    btnDownload.disabled = false;
+    activeIndex = 0;
+    tablePicker.value = "0";
+    hydrateFromActive();
+  }
+
+  function disableUI(){
+    tablePicker.disabled = true;
+    btnDownload.disabled = true;
+  }
+
+  function hydrateFromActive(){
+    const dt = decisionTables[activeIndex].node;
+    const c = dt.content || {};
+    const inputs = (c.inputs || []).map(i => ({ id: i.id, name: i.name || i.id, kind: "input" }));
+    const outputs = (c.outputs || []).map(o => ({ id: o.id, name: o.name || o.id, kind: "output" }));
+    columns = [...inputs, ...outputs];
+
+    // preserve extras
+    rowExtraById.clear();
+    const managedKeys = new Set(columns.map(c => c.id).concat(["_id","_description"]));
+    rules = Array.isArray(c.rules) ? c.rules : [];
+    rules.forEach(r => {
+      const extras = {};
+      Object.keys(r || {}).forEach(k => { if(!managedKeys.has(k)) extras[k] = r[k]; });
+      if (r && r._id) rowExtraById.set(r._id, extras);
+      if (!r._id) r._id = crypto.randomUUID();
+      if (typeof r._description !== "string") r._description = "";
+    });
+
+    // Build catalogs
+    airlineCatalog = buildCatalog(columns.filter(AIRLINE_COL_PRED), 2, true);
+    cabinCatalog = buildCatalog(columns.filter(CABIN_COL_PRED), null, false);
+    airportCatalog = buildCatalog(columns.filter(AIRPORT_COL_PRED), 3, true);
+    bundleCatalog = buildCatalog(columns.filter(BUNDLE_COL_PRED), null, false);
+    locationCatalog = buildCatalog(columns.filter(LOCATION_COL_PRED), null, false);
+    clubCatalog = buildCatalog(columns.filter(CLUB_COL_PRED), null, false);
+    ffcodeCatalog = buildCatalog(columns.filter(FFCODE_COL_PRED), null, false);
+
+    meta.textContent = `Hit policy: ${c.hitPolicy ?? "n/a"} • Inputs: ${inputs.length} (A–U) • Outputs: ${outputs.length} (V+) • Rules: ${rules.length}`;
+    tablePicker.disabled = false;
+
+    if(!rules.find(r => r._id === selectedRuleId)){
+      selectedRuleId = rules[0]?._id || null;
+    }
+    renderColsPanel();
+    renderList();
+    renderDetail();
+  }
+
+  /* ====== Catalog builders ====== */
+  function buildCatalog(cols, tokenLen, uppercase){
+    const set = new Set();
+    rules.forEach(r => {
+      cols.forEach(c => {
+        const raw = r[c.id];
+        const tokens = extractQuotedTokens(raw, tokenLen, uppercase);
+        tokens.forEach(t => set.add(t));
+      });
+    });
+    return Array.from(set).sort();
+  }
+
+  function extractQuotedTokens(raw, tokenLen, uppercase){
+    if(raw == null) return [];
+    const s = String(raw).trim();
+    if(s === "") return [];
+    let tokens = [];
+    const quoted = s.match(/"([^"]+)"/g);
+    if(quoted){
+      tokens = quoted.map(q => q.replace(/^"|"$/g,""));
+    } else {
+      tokens = s.split(/[\s,]+/).filter(Boolean);
+    }
+    tokens = tokens.map(t => {
+      t = t.trim();
+      if(uppercase) t = t.toUpperCase();
+      return t;
+    });
+    if(tokenLen) tokens = tokens.filter(t => t.length === tokenLen);
+    return tokens;
+  }
+
+  /* ====== Resolve "Rule Name" for left list ====== */
+  function getRuleName(r){
+    let rnCol = columns.find(c => norm(c.name) === "rulename" || norm(c.id) === "rulename");
+    if(!rnCol) rnCol = columns.find(c => norm(c.name).includes("rulename") || norm(c.id).includes("rulename"));
+    const rn = rnCol ? (r[rnCol.id] ?? "").toString().trim() : "";
+    return rn || "";
+  }
+
+  /* ====== List (left pane) ====== */
+  function renderList(){
+    const q = searchBox?.value.trim().toLowerCase() || "";
+    const items = rules.filter(r => {
+      if(!q) return true;
+      const blob = (getRuleName(r) + " " + r._description + " " + columns.map(c => r[c.id] ?? "").join(" ")).toLowerCase();
+      return blob.includes(q);
+    });
+    list.innerHTML = items.map(r => {
+      const active = r._id === selectedRuleId ? "active" : "";
+      const title = getRuleName(r) || "(untitled rule)";
+      const subtitle = (r._description || "").trim();
+      return `<div class="rule ${active}" data-rid="${r._id}">
+        <div>
+          <div><b>${escapeHtml(title)}</b></div>
+          <div class="hit">${escapeHtml(subtitle)}</div>
+        </div>
+        <div style="display:flex;align-items:center;gap:6px">
+          <span class="tag">Rule</span>
+        </div>
+      </div>`;
+    }).join("");
+    $$(".rule").forEach(el => el.addEventListener("click", () => {
+      selectedRuleId = el.dataset.rid;
+      renderList();
+      renderDetail();
+    }));
+  }
+
+  /* ====== Detail (right pane) ====== */
+  function renderDetail(){
+    const r = rules.find(x => x._id === selectedRuleId);
+    if(!r){
+      detail.innerHTML = `<div class="muted">Select a rule from the list.</div>`;
+      return;
+    }
+    const header = `
+      <div class="h1">
+        <span>Rule detail</span>
+        <span class="tag">${escapeHtml(getRuleName(r) || r._description || "(untitled)")}</span>
+        <span class="spacer"></span>
+        <button id="saveBtn" class="primary">Save JSON</button>
+      </div>
+      <div class="row">
+        <label class="label">
+          <b>Description</b>
+          <span class="mini">_description</span>
+        </label>
+        <input id="desc" class="cell" value="${escapeAttr(r._description || "")}" />
+      </div>
+    `;
+
+    const inputs = columns.filter(c => c.kind === "input" && !hiddenCols.has(c.id));
+    const outputs = columns.filter(c => c.kind === "output" && !hiddenCols.has(c.id));
+
+    const inputsHtml = inputs.map(c => fieldRow(c, r)).join("");
+    const outputsHtml = outputs.map(c => fieldRow(c, r)).join("");
+
+    detail.innerHTML = `
+      ${header}
+      <div class="sect input-col">
+        <h3>Inputs (A–U)</h3>
+        ${inputsHtml || `<div class="muted">No visible inputs (toggle in Fields panel)</div>`}
+      </div>
+      <div class="sect output-col">
+        <h3>Outputs (V+)</h3>
+        ${outputsHtml || `<div class="muted">No visible outputs (toggle in Fields panel)</div>`}
+      </div>
+    `;
+
+    $("#saveBtn").addEventListener("click", onSaveJson);
+    $("#desc").addEventListener("input", e => { r._description = e.target.value; });
+    // bind inputs
+    $$(".cell[data-key]").forEach(inp => {
+      const key = inp.dataset.key;
+      const col = columns.find(c => c.id === key);
+      if(DATE_COL_PRED(col)){
+        inp.addEventListener("click", () => openDatePanel(r._id, key));
+        inp.addEventListener("keydown", (e)=>{ if(e.key==="Enter"){ openDatePanel(r._id, key);} });
+      } else if(inp.classList.contains("pickerable")){
+        inp.addEventListener("input", () => { r[key] = inp.value; });
+      } else {
+        if(inp.tagName === "SELECT"){
+          inp.addEventListener("change", () => { r[key] = inp.value; });
+        } else {
+          inp.addEventListener("input", () => { r[key] = inp.value; });
+        }
+      }
+    });
+    $$(".pick-values").forEach(btn => btn.addEventListener("click", () => openPicker(r._id, btn.dataset.key)));
+  }
+
+  function fieldRow(col, r){
+    const val = (r[col.id] ?? "");
+    const isAir = AIRLINE_COL_PRED(col);
+    const isCabin = CABIN_COL_PRED(col);
+    const isAirport = AIRPORT_COL_PRED(col);
+    // Explicit mapping for ClubName, FFCode, BundleCode
+    const isClub = CLUB_COL_PRED(col);
+    const isFF = FFCODE_COL_PRED(col);
+    const isBundle = BUNDLE_COL_PRED(col);
+    const isLocation = LOCATION_COL_PRED(col);
+    const isDate = DATE_COL_PRED(col);
+    const isMulti = isAir || isCabin || isAirport || isBundle || isClub || isFF || isLocation;
+
+    const editor = editorFor(col, String(val), { isAir, isCabin, isAirport, isBundle, isClub, isFF, isMulti, isDate, isLocation });
+    const pickBtn = (isMulti || isDate || isAirport) ? `<button class="ghost pick-values" data-key="${escapeAttr(col.id)}" type="button">${isDate ? "Pick date" : "Pick values"}</button>` : "";
+
+    return `<div class="field">
+      <label class="label">
+        <b>${escapeHtml(col.name)}</b>
+        <span class="mini">${escapeHtml(col.id)}</span>
+      </label>
+      ${editor}
+      ${pickBtn}
+    </div>`;
+  }
+
+  /* ====== Columns panel (hide/show, drag reorder, duplicate) ====== */
+  function renderColsPanel(){
+    colsPanel.innerHTML = columns.map(c => {
+      const vis = !hiddenCols.has(c.id);
+      const badge = c.kind === "input" ? "Input" : "Output";
+      return `<div class="col-chip" draggable="true" data-colid="${escapeAttr(c.id)}">
+        <span class="drag">↕</span>
+        <span class="tag">${badge}</span>
+        <b>${escapeHtml(c.name)}</b>
+        <span class="muted">(${escapeHtml(c.id)})</span>
+        <label style="display:flex;align-items:center;gap:6px;margin-left:auto;">
+          <input type="checkbox" class="checkbox col-vis" data-colid="${escapeAttr(c.id)}" ${vis?"checked":""} />
+          <span>Visible</span>
+        </label>
+        <button class="dup" data-colid="${escapeAttr(c.id)}" title="Duplicate column">Duplicate</button>
+      </div>`;
+    }).join("");
+
+    $$(".col-vis").forEach(cb => {
+      cb.addEventListener("change", () => {
+        const id = cb.dataset.colid;
+        if(cb.checked) hiddenCols.delete(id); else hiddenCols.add(id);
+        renderDetail();
+      });
+    });
+
+    $$(".dup[data-colid]").forEach(btn => {
+      btn.addEventListener("click", () => duplicateColumn(btn.dataset.colid));
+    });
+
+    $$(".col-chip").forEach(chip => {
+      chip.addEventListener("dragstart", onDragStartCol);
+      chip.addEventListener("dragover", onDragOverCol);
+      chip.addEventListener("drop", onDropCol);
+    });
+  }
+
+  let dragColId = null;
+  function onDragStartCol(e){
+    dragColId = e.currentTarget.dataset.colid;
+    e.dataTransfer.effectAllowed = "move";
+  }
+  function onDragOverCol(e){ e.preventDefault(); e.dataTransfer.dropEffect = "move"; }
+  function onDropCol(e){
+    e.preventDefault();
+    const targetId = e.currentTarget.dataset.colid;
+    if(!dragColId || dragColId === targetId) return;
+    const fromIdx = columns.findIndex(c => c.id === dragColId);
+    const toIdx = columns.findIndex(c => c.id === targetId);
+    if(fromIdx < 0 || toIdx < 0) return;
+    const [moved] = columns.splice(fromIdx, 1);
+    columns.splice(toIdx, 0, moved);
+    renderColsPanel();
+    renderDetail();
+  }
+
+  function duplicateColumn(colId){
+    const dt = decisionTables[activeIndex].node;
+    const c = dt.content || {};
+    const isInput = (c.inputs || []).some(i => i.id === colId);
+    const srcArr = isInput ? (c.inputs || []) : (c.outputs || []);
+    const srcIdx = srcArr.findIndex(x => x.id === colId);
+    if(srcIdx < 0) return;
+    const src = srcArr[srcIdx];
+    let base = src.id + "_copy";
+    let newId = base;
+    let seq = 2;
+    while( columns.some(co => co.id === newId) || (srcArr.some(x=>x.id===newId)) ){
+      newId = base + "_" + seq++;
+    }
+    const cloneObj = {...src, id: newId, name: (src.name || src.id) + " (copy)"};
+    srcArr.splice(srcIdx + 1, 0, cloneObj);
+    const uiIdx = columns.findIndex(c => c.id === colId);
+    const kind = isInput ? "input" : "output";
+    columns.splice(uiIdx + 1, 0, { id: newId, name: cloneObj.name, kind });
+    (rules || []).forEach(r => { r[newId] = r[colId] ?? ""; });
+    renderColsPanel();
+    renderDetail();
+    toast("Column duplicated: " + cloneObj.name);
+    airlineCatalog = buildCatalog(columns.filter(AIRLINE_COL_PRED), 2, true);
+    cabinCatalog = buildCatalog(columns.filter(CABIN_COL_PRED), null, false);
+    airportCatalog = buildCatalog(columns.filter(AIRPORT_COL_PRED), 3, true);
+    bundleCatalog = buildCatalog(columns.filter(BUNDLE_COL_PRED), null, false);
+    locationCatalog = buildCatalog(columns.filter(LOCATION_COL_PRED), null, false);
+    clubCatalog = buildCatalog(columns.filter(CLUB_COL_PRED), null, false);
+    ffcodeCatalog = buildCatalog(columns.filter(FFCODE_COL_PRED), null, false);
+  }
+
+  /* ====== Editors ====== */
+  // Boolean whitelist (added isTransconcontinental + multiFlightRule_allowOnlyOnCurrentFlight)
+  const DROPDOWN_BOOL_WHITELIST = [
+    "haspnr", "isclubmember", "is employee", "isemployee",
+    "istranscontinental", "istransconcontinental",
+    "isinternational", "osi",
+    "multiflightrole_allowonlyoncurrently", // legacy fuzzy
+    "multiflightrule_allow_onlyoncurrently", // legacy fuzzy
+    "multiFlightRule_allowOnlyOnCurrentFlight" // explicit
+  ];
+
+  function editorFor(col, value, meta){
+    const { isAir, isCabin, isAirport, isBundle, isClub, isFF, isMulti, isDate, isLocation } = meta;
+
+    if(isDate){
+      return `<input class="cell pickerable" data-key="${escapeAttr(col.id)}" value="${escapeAttr(String(value))}" placeholder="e.g., >2025-01-01" />`;
+    }
+    if (isCabin) {
+      return `<input class="cell pickerable" data-key="${escapeAttr(col.id)}" value="${escapeAttr(String(value))}" placeholder='e.g., "F","J","Y"' />`;
+    }
+    if(isLocation){
+      return `<input class="cell pickerable" data-key="${escapeAttr(col.id)}" value="${escapeAttr(String(value))}" placeholder='e.g., "DEPARTURE,ARRIVAL"' />`;
+    }
+    if(isAirport){
+      return `<input class="cell pickerable" data-key="${escapeAttr(col.id)}" value="${escapeAttr(String(value))}" placeholder='e.g., "JFK","LAX"' />`;
+    }
+    if (isBundle) {
+      return `<input class="cell pickerable" data-key="${escapeAttr(col.id)}" value="${escapeAttr(String(value))}" placeholder='e.g., "1002","2004"' />`;
+    }
+    if (isClub){
+      return `<input class="cell pickerable" data-key="${escapeAttr(col.id)}" value="${escapeAttr(String(value))}" placeholder='e.g., "SUB-CL-0C1-006","3"' />`;
+    }
+    if (isFF){
+      return `<input class="cell pickerable" data-key="${escapeAttr(col.id)}" value="${escapeAttr(String(value))}" placeholder='e.g., "5","G","*G","GS"' />`;
+    }
+    if(isAir){
+      return `<input class="cell pickerable" data-key="${escapeAttr(col.id)}" value="${escapeAttr(String(value))}" placeholder='e.g., "UA","AA"' />`;
+    }
+    if(isMulti){
+      return `<input class="cell pickerable" data-key="${escapeAttr(col.id)}" value="${escapeAttr(String(value))}" placeholder='e.g., "value1","value2"' />`;
+    }
+
+    if(isDropdownBoolean(col)){
+      const v = String(value);
+      const opts = [`<option value=""></option>`,
+                    `<option value="true"${v==="true"?" selected":""}>TRUE</option>`,
+                    `<option value="false"${v==="false"?" selected":""}>FALSE</option>`].join("");
+      return `<select class="cell" data-key="${escapeAttr(col.id)}">${opts}</select>`;
+    }
+
+    return `<input class="cell" data-key="${escapeAttr(col.id)}" value="${escapeAttr(String(value))}" />`;
+  }
+
+  function isDropdownBoolean(col){
+    const n = norm(col.name);
+    const i = norm(col.id);
+    if(DROPDOWN_BOOL_WHITELIST.includes(n) || DROPDOWN_BOOL_WHITELIST.includes(i)) return true;
+    if(i.startsWith("multiflightrule") || n.startsWith("multiflightrule")) return true;
+    return false;
+  }
+
+  /* ====== Picker panel ====== */
+  function openPicker(ruleId, colId){
+    panelOpen = true;
+    panelTarget.ruleId = ruleId;
+    panelTarget.colId = colId;
+    const col = columns.find(c => c.id === colId);
+    if(AIRLINE_COL_PRED(col)) panelTarget.kind = "airline";
+    else if(CABIN_COL_PRED(col)) panelTarget.kind = "cabin";
+    else if(AIRPORT_COL_PRED(col)) panelTarget.kind = "airport";
+    else if(BUNDLE_COL_PRED(col)) panelTarget.kind = "bundle";
+    else if(LOCATION_COL_PRED(col)) panelTarget.kind = "location";
+    else if(CLUB_COL_PRED(col)) panelTarget.kind = "club";
+    else if(FFCODE_COL_PRED(col)) panelTarget.kind = "ffcode";
+    else panelTarget.kind = "generic";
+
+    pickerBody.style.display = "";
+    dateBody.style.display = "none";
+
+    panelFieldLabel.textContent = " • " + colId;
+    panelTitle.textContent = panelTarget.kind === "airline" ? "Pick airlines"
+                           : panelTarget.kind === "cabin" ? "Pick cabins"
+                           : panelTarget.kind === "airport" ? "Pick airports"
+                           : panelTarget.kind === "bundle" ? "Pick bundle codes"
+                           : panelTarget.kind === "club" ? "Pick club names"
+                           : panelTarget.kind === "ffcode" ? "Pick FF codes"
+                           : "Pick values";
+
+    const r = rules.find(x => x._id === ruleId);
+    const current = new Set(extractQuotedTokens(r[colId], null, panelTarget.kind === "airline" || panelTarget.kind === "airport"));
+
+    renderPickerList();
+    renderSelectedChips(current);
+    panelMask.classList.add("show");
+    pickerPanel.classList.add("show");
+    pickerPanel.setAttribute("aria-hidden","false");
+  }
+
+  function closePanel(){
+    panelOpen = false;
+    panelTarget = { ruleId: null, colId: null, kind: "generic" };
+    panelMask.classList.remove("show");
+    pickerPanel.classList.remove("show");
+    pickerPanel.setAttribute("aria-hidden","true");
+    selectedChips.innerHTML = "";
+    pickerList.innerHTML = "";
+    pickerSearch.value = "";
+    pickerCustom.value = "";
+  }
+
+  function renderPickerList(){
+    const q = (pickerSearch.value || "").trim();
+    let items = [];
+    switch(panelTarget.kind){
+      case "airline": items = airlineCatalog.slice(); break;
+      case "cabin": items = cabinCatalog.slice(); break;
+      case "airport": items = airportCatalog.slice(); break;
+      case "bundle": items = bundleCatalog.slice(); break;
+      case "club": items = clubCatalog.slice(); break;
+      case "ffcode": items = ffcodeCatalog.slice(); break;
+      default: items = []; break;
+    }
+    const upperKinds = new Set(["airline","airport"]);
+    const normFn = (s)=> upperKinds.has(panelTarget.kind) ? s.toUpperCase() : s;
+    const filtered = q ? items.filter(code => normFn(code).includes(normFn(q))) : items;
+    pickerList.innerHTML = filtered.map(code => {
+      return `<div class="item" draggable="true" data-code="${escapeAttr(code)}">
+        <span>${escapeHtml(code)}</span>
+        <button type="button" class="ghost add" data-code="${escapeAttr(code)}">Add</button>
+      </div>`;
+    }).join("");
+
+    $$(".item[draggable=true]").forEach(el => {
+      el.addEventListener("dragstart", (e) => {
+        e.dataTransfer.setData("text/plain", el.dataset.code);
+      });
+    });
+    $$(".item .add").forEach(btn => {
+      btn.addEventListener("click", () => addSelectedToken(btn.dataset.code));
+    });
+  }
+
+  function renderSelectedChips(set){
+    selectedChips.innerHTML = "";
+    Array.from(set).sort().forEach(code => {
+      const div = document.createElement("div");
+      div.className = "chip";
+      div.dataset.code = code;
+      div.textContent = code;
+      const x = document.createElement("span");
+      x.className = "x";
+      x.textContent = "✕";
+      x.addEventListener("click", () => {
+        div.remove();
+      });
+      div.appendChild(x);
+      selectedChips.appendChild(div);
+    });
+  }
+
+  function onDropToken(e){
+    e.preventDefault();
+    pickerDrop.style.background = "transparent";
+    const code = e.dataTransfer.getData("text/plain");
+    if(!code) return;
+    addSelectedToken(code);
+  }
+
+  function normalizeToken(v, kind){
+    v = String(v || "").trim();
+    if(!v) return "";
+    if(kind === "airline"){
+      v = v.toUpperCase();
+      if(v.length !== 2) return "";
+    } else if(kind === "airport"){
+      v = v.toUpperCase();
+      if(v.length !== 3) return "";
+    } // club/bundle/ffcode/cabin/generic: keep as typed
+    return v;
+  }
+
+  function addSelectedToken(code){
+    code = normalizeToken(code, panelTarget.kind);
+    if(!code) return;
+    if($(`#selectedChips .chip[data-code="${cssEscape(code)}"]`)) return;
+    const div = document.createElement("div");
+    div.className = "chip";
+    div.dataset.code = code;
+    div.textContent = code;
+    const x = document.createElement("span");
+    x.className = "x";
+    x.textContent = "✕";
+    x.addEventListener("click", () => div.remove());
+    div.appendChild(x);
+    selectedChips.appendChild(div);
+  }
+
+  function clearPanel(){
+    selectedChips.innerHTML = "";
+  }
+
+  function applyPanel(){
+    const { ruleId, colId, kind } = panelTarget;
+    if(!ruleId || !colId) return;
+    const r = rules.find(x => x._id === ruleId);
+    const tokens = $$("#selectedChips .chip").map(ch => ch.dataset.code);
+    if(kind === "airline" || kind === "airport"){
+      r[colId] = tokens.map(c => `"${String(c).toUpperCase()}"`).join(",");
+    } else {
+      r[colId] = tokens.map(c => `"${c}"`).join(",");
+    }
+    const inp = detail.querySelector(`.cell[data-key="${cssEscape(colId)}"]`);
+    if(inp) inp.value = r[colId];
+    closePanel();
+  }
+
+  /* ====== Date panel ====== */
+  function openDatePanel(ruleId, colId){
+    panelOpen = true;
+    panelTarget.ruleId = ruleId;
+    panelTarget.colId = colId;
+    panelTarget.kind = "date";
+    pickerBody.style.display = "none";
+    dateBody.style.display = "";
+    panelTitle.textContent = "Pick date";
+    panelFieldLabel.textContent = " • " + colId;
+
+    const r = rules.find(x => x._id === ruleId);
+    const raw = String(r[colId] ?? "").trim();
+    const m = raw.match(/^([<>])\s*(\d{4}-\d{2}-\d{2})$/);
+    if(m){
+      dateComparator.value = m[1];
+      datePicker.value = m[2];
+    } else {
+      dateComparator.value = "";
+      datePicker.value = "";
+    }
+
+    panelMask.classList.add("show");
+    pickerPanel.classList.add("show");
+    pickerPanel.setAttribute("aria-hidden","false");
+  }
+
+  function applyDate(){
+    const { ruleId, colId } = panelTarget;
+    if(!ruleId || !colId) return;
+    const cmp = dateComparator.value;
+    const d = datePicker.value;
+    const r = rules.find(x => x._id === ruleId);
+    r[colId] = (cmp && d) ? `${cmp}${d}` : "";
+    const inp = detail.querySelector(`.cell[data-key="${cssEscape(colId)}"]`);
+    if(inp) inp.value = r[colId];
+    closePanel();
+  }
+
+  function clearDate(){
+    dateComparator.value = "";
+    datePicker.value = "";
+  }
+
+  function cssEscape(s){
+    return s.replace(/["\\]/g, "\\$&");
+  }
+
+  /* ====== Rule ops ====== */
+  function addRule(){
+    const rid = crypto.randomUUID();
+    const rule = {_id: rid, _description: ""};
+    columns.forEach(c => rule[c.id] = "");
+    rules.push(rule);
+    selectedRuleId = rid;
+    renderList();
+    renderDetail();
+  }
+
+  function duplicateRule(){
+    const r = rules.find(x => x._id === selectedRuleId);
+    if(!r){ toast("Select a rule to duplicate.", true); return; }
+    const clone = JSON.parse(JSON.stringify(r));
+    clone._id = crypto.randomUUID();
+    clone._description = (clone._description || "") + " (copy)";
+    const idx = rules.findIndex(x => x._id === r._id);
+    rules.splice(idx + 1, 0, clone);
+    selectedRuleId = clone._id;
+    renderList();
+    renderDetail();
+    toast("Rule duplicated.");
+  }
+
+  function deleteRule(){
+    const idx = rules.findIndex(x => x._id === selectedRuleId);
+    if(idx < 0){ toast("Select a rule to delete.", true); return; }
+    rules.splice(idx, 1);
+    selectedRuleId = rules[idx]?. _id || rules[idx-1]?._id || null;
+    renderList();
+    renderDetail();
+  }
+
+  /* ====== Save (normalize + validate special fields) ====== */
+  function onSaveJson(){
+    const issues = normalizeAndValidate();
+    if(issues.length){
+      toast("Fix validation issues before saving:\n" + issues.join("\n"), true);
+      return;
+    }
+    const dt = decisionTables[activeIndex].node;
+    const managed = new Set(columns.map(c => c.id).concat(["_id","_description"]));
+    (dt.content.rules || []).forEach(r => {
+      const extras = rowExtraById.get(r._id);
+      if(extras){
+        Object.keys(extras).forEach(k => { if(!managed.has(k)) r[k] = extras[k]; });
+      }
+    });
+    const blob = new Blob([JSON.stringify(originalDoc, null, 2)], {type: "application/json"});
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    const activeName = (decisionTables[activeIndex]?.node?.name || "rules");
+    a.download = sanitizeFilename(activeName) + ".json";
+    document.body.appendChild(a);
+    a.click();
+    setTimeout(() => {
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+    }, 0);
+    toast("JSON saved.");
+  }
+
+  function normalizeAndValidate(){
+    const problems = [];
+    const airportCols = columns.filter(c => AIRPORT_COL_PRED(c) && !hiddenCols.has(c.id));
+    const airlineCols = columns.filter(c => AIRLINE_COL_PRED(c) && !hiddenCols.has(c.id));
+
+    function normalizeQuotedList(raw, tokenLen, uppercase){
+      if(raw == null) return "";
+      const s = String(raw).trim();
+      if(s === "") return "";
+      let tokens = [];
+      const quoted = s.match(/"([^"]+)"/g);
+      if(quoted){
+        tokens = quoted.map(q => q.replace(/^"|"$/g,""));
+      } else {
+        tokens = s.split(/[\s,]+/).filter(Boolean);
+      }
+      tokens = tokens.map(t => {
+        t = t.trim();
+        if(uppercase) t = t.toUpperCase();
+        return t;
+      });
+      if(tokenLen) tokens = tokens.filter(t => t.length === tokenLen);
+      return tokens.map(t => `"${t}"`).join(",");
+    }
+
+    function validateQuotedList(raw, tokenLen, uppercase){
+      if(raw == null) return true;
+      const s = String(raw).trim();
+      if(s === "") return true;
+      const invalid = s.split(",").some(part => {
+        const m = part.match(/^"([A-Za-z0-9]+)"$/);
+        if(!m) return true;
+        const val = uppercase ? m[1].toUpperCase() : m[1];
+        return tokenLen ? val.length !== tokenLen : false;
+      });
+      return !invalid;
+    }
+
+    rules.forEach((r, idx) => {
+      const rowNum = idx + 1;
+      airportCols.forEach(c => {
+        const before = r[c.id];
+        const normalized = normalizeQuotedList(before, 3, true);
+        if(normalized !== String(before).trim()) r[c.id] = normalized;
+        if(!validateQuotedList(r[c.id], 3, true)){
+          problems.push(`Row ${rowNum}: ${c.name} must be "AAA","BBB" (3-letter IATA codes).`);
+        }
+      });
+      airlineCols.forEach(c => {
+        const before = r[c.id];
+        const normalized = normalizeQuotedList(before, 2, true);
+        if(normalized !== String(before).trim()) r[c.id] = normalized;
+        if(!validateQuotedList(r[c.id], 2, true)){
+          problems.push(`Row ${rowNum}: ${c.name} must be "AA","UA" (2-letter IATA codes).`);
+        }
+      });
+      columns.filter(DATE_COL_PRED).forEach(c => {
+        const v = String(r[c.id] || "").trim();
+        if(v === "") return;
+        const ok = /^([<>])\s*(\d{4}-\d{2}-\d{2})$/.test(v);
+        if(!ok) problems.push(`Row ${rowNum}: ${c.name} should look like >YYYY-MM-DD or <YYYY-MM-DD.`);
+      });
+    });
+
+    return problems;
+  }
+
+  /* ====== Utils ====== */
+  function toast(msg, error=false){
+    toastEl.textContent = msg;
+    toastEl.classList.toggle("err", !!error);
+    toastEl.classList.add("show");
+    setTimeout(() => toastEl.classList.remove("show"), 4000);
+  }
+
+  function escapeHtml(s){
+    return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;");
+  }
+  function escapeAttr(s){
+    return String(s).replaceAll("&","&amp;").replaceAll("<","&lt;").replaceAll(">","&gt;").replaceAll('"',"&quot;");
+  }
+  function sanitizeFilename(name){
+    return String(name).replace(/[^a-z0-9\-_\.]+/gi,"_");
+  }
+})();
+</script>
+</body>
+</html>
