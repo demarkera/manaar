@@ -214,7 +214,7 @@
   };
   const BUNDLE_COL_PRED = (col) => {
     const nm = norm(col.name), id = norm(col.id);
-    return nm.includes("bundlecode") || id.includes("bundlecode") || EXPLICIT_PICKER_FIELDS.has(id);
+    return nm.includes("bundlecode") || id.includes("bundlecode") || nm.includes("bundlestatuscode") || id.includes("bundlestatuscode") || EXPLICIT_PICKER_FIELDS.has(id);
   };
   const LOCATION_COL_PRED = (col) => {
     const nm = norm(col.name), id = norm(col.id);
